@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+  <title>Talatala QR Camera</title>
+
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 15px;
+      background: #111;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin: 10px 0;
+    }
+
+    .instruction {
+      background: #222;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 15px;
+      line-height: 1.5;
+    }
+
+    #reader {
+      width: 100%;
+      max-width: 550px;
+      margin: auto;
+      background: black;
+      border-radius: 15px;
+      overflow: hidden;
+    }
+
+    #status {
+      margin-top: 18px;
+      padding: 15px;
+      border-radius: 10px;
+      background: #222;
+      font-size: 17px;
+      line-height: 1.5;
+    }
+
+    .success {
+      background: #14532d !important;
+    }
+
+    .error {
+      background: #7f1d1d !important;
+    }
+
+    .warning {
+      background: #713f12 !important;
+    }
+
+    button {
+      width: 100%;
+      min-height: 55px;
+      border: none;
+      border-radius: 12px;
+      margin-top: 12px;
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+      background: #dc3545;
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1>📷 Talatala QR Scanner</h1>
+
+  <div class="instruction">
+
+    <b>LIVE CAMERA SCANNER</b>
+
+    <br><br>
+
+    Iharap ang cellphone camera sa QR Code ng learner.
+
+    <br>
+
+    Siguraduhing malinaw at nasa loob ng box ang QR Code.
+
+  </div>
+
+  <div id="reader"></div>
+
+  <div id="status">
+    ⏳ Starting camera...
+  </div>
+
+  <button
+    type="button"
+    onclick="closeCamera()">
+
+    ⛔ CLOSE CAMERA
+
+  </button>
+
+</div>
+
+
+<script>
+
+let qrScanner = null;
+let scanning = false;
+let alreadyScanned = false;
+
+
+/* =========================================
+   STATUS MESSAGE
+========================================= */
+
+function showStatus(message, type) {
+
+  const status =
+    document.getElementById("status");
+
+  status.innerHTML = message;
+
+  status.className = "";
+
+  if (type) {
+    status.classList.add(type);
+  }
+
+}
+
+
+/* =========================================
+   START CAMERA
+========================================= */
+
+function startCamera() {
+
+  if (scanning) {
+    return;
+  }
+
+  if (typeof Html5Qrcode === "undefined") {
+
+    showStatus(
+      "❌ QR scanner library failed to load.<br>" +
+      "Please check your internet connection.",
+      "error"
+    );
+
+    return;
+  }
+
+
+  qrScanner =
+    new Html5Qrcode("reader");
+
+
+  const config = {
+
+    fps: 10,
+
+    qrbox: function(width, height) {
+
+      const size =
+        Math.floor(
+          Math.min(width, height) * 0.70
+        );
+
+      return {
+        width: size,
+        height: size
+      };
+
+    },
+
+    aspectRatio: 1.0
+
+  };
+
+
+  showStatus(
+    "📷 Requesting camera permission...",
+    ""
+  );
+
+
+  qrScanner
+
+    .start(
+
+      {
+        facingMode: "environment"
+      },
+
+      config,
+
+      function(decodedText) {
+
+        if (alreadyScanned) {
+          return;
+        }
+
+        alreadyScanned = true;
+
+        const learnerId =
+          String(decodedText).trim();
+
+
+        showStatus(
+          "✅ QR CODE DETECTED!" +
+          "<br><br>" +
+          "<b>Learner ID:</b> " +
+          learnerId +
+          "<br><br>" +
+          "⏳ Sending to Attendance System...",
+          "success"
+        );
+
+
+        scanning = false;
+
+
+        stopScanner(function() {
+
+          sendResultToAttendancePage(
+            learnerId
+          );
+
+        });
+
+      },
+
+      function(errorMessage) {
+
+        /*
+          Continuous QR scan errors are normal.
+          Do not display them.
+        */
+
+      }
+
+    )
+
+    .then(function() {
+
+      scanning = true;
+
+      showStatus(
+        "📷 <b>CAMERA READY</b>" +
+        "<br><br>" +
+        "Itapat ang QR Code sa box.",
+        ""
+      );
+
+    })
+
+    .catch(function(error) {
+
+      console.error(
+        "Camera start error:",
+        error
+      );
+
+      scanning = false;
+
+
+      let message =
+        "❌ Hindi ma-access ang camera.";
+
+
+      if (
+        error &&
+        (
+          String(error).includes("NotAllowedError") ||
+          String(error).includes("Permission")
+        )
+      ) {
+
+        message +=
+          "<br><br>" +
+          "I-ALLOW ang Camera Permission " +
+          "sa cellphone browser.";
+
+      }
+
+      else if (
+        error &&
+        String(error).includes("NotFoundError")
+      ) {
+
+        message +=
+          "<br><br>" +
+          "Walang camera na nakita sa device.";
+
+      }
+
+      else {
+
+        message +=
+          "<br><br>" +
+          "Siguraduhing gumagamit ka ng " +
+          "HTTPS at Chrome browser.";
+
+      }
+
+
+      showStatus(
+        message,
+        "error"
+      );
+
+    });
+
+}
+
+
+/* =========================================
+   STOP SCANNER
+========================================= */
+
+function stopScanner(callback) {
+
+  if (!qrScanner) {
+
+    if (callback) {
+      callback();
+    }
+
+    return;
+  }
+
+
+  qrScanner
+    .stop()
+
+    .then(function() {
+
+      try {
+        qrScanner.clear();
+      }
+
+      catch (e) {
+        console.log(e);
+      }
+
+      scanning = false;
+
+      if (callback) {
+        callback();
+      }
+
+    })
+
+    .catch(function(error) {
+
+      console.log(
+        "Scanner stop error:",
+        error
+      );
+
+      scanning = false;
+
+      if (callback) {
+        callback();
+      }
+
+    });
+
+}
+
+
+/* =========================================
+   SEND QR RESULT TO INDEX.HTML
+========================================= */
+
+function sendResultToAttendancePage(
+  learnerId
+) {
+
+  if (!window.opener) {
+
+    showStatus(
+      "⚠️ Walang Attendance page na nakita." +
+      "<br><br>" +
+      "Buksan ang camera gamit ang " +
+      "START LIVE CAMERA button sa Attendance System.",
+      "warning"
+    );
+
+    return;
+  }
+
+
+  try {
+
+    window.opener.postMessage(
+
+      {
+        type: "TALATALA_QR_RESULT",
+
+        learnerId: learnerId
+
+      },
+
+      "*"
+
+    );
+
+
+    showStatus(
+      "✅ Learner ID sent!" +
+      "<br><br>" +
+      "Returning to Attendance System...",
+      "success"
+    );
+
+
+    setTimeout(function() {
+
+      window.close();
+
+    }, 700);
+
+
+  }
+
+  catch (error) {
+
+    console.error(error);
+
+    showStatus(
+      "❌ Hindi maipadala ang Learner ID.",
+      "error"
+    );
+
+  }
+
+}
+
+
+/* =========================================
+   CLOSE CAMERA
+========================================= */
+
+function closeCamera() {
+
+  stopScanner(function() {
+
+    window.close();
+
+  });
+
+}
+
+
+/* =========================================
+   PAGE LOAD
+========================================= */
+
+window.addEventListener(
+  "load",
+  function() {
+
+    startCamera();
+
+  }
+);
+
+</script>
+
+</body>
+</html>
