@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 
   <meta charset="UTF-8">
 
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0">
 
   <title>Talatala QR Scanner</title>
 
@@ -19,28 +21,23 @@
 
     body {
       margin: 0;
-      padding: 15px;
+      padding: 20px;
       background: #111;
       color: white;
       font-family: Arial, sans-serif;
       text-align: center;
     }
 
-    .container {
-      max-width: 520px;
-      margin: auto;
-    }
-
     h1 {
-      font-size: 25px;
+      font-size: 28px;
       margin: 10px 0 20px;
     }
 
     .instruction {
       background: #222;
-      border-radius: 16px;
-      padding: 22px 15px;
-      margin-bottom: 18px;
+      border-radius: 18px;
+      padding: 22px;
+      margin-bottom: 20px;
       font-size: 18px;
       line-height: 1.5;
     }
@@ -48,47 +45,47 @@
     #reader {
       width: 100%;
       max-width: 500px;
-      margin: auto;
+      margin: 0 auto 20px;
       border-radius: 15px;
       overflow: hidden;
       background: black;
     }
 
     #status {
-      margin-top: 18px;
       padding: 18px;
       border-radius: 14px;
-      background: #333;
+      margin: 15px 0;
       font-size: 17px;
       line-height: 1.5;
     }
 
+    .info {
+      background: #333;
+    }
+
     .success {
-      background: #146c43 !important;
+      background: #146c43;
     }
 
     .error {
-      background: #842029 !important;
+      background: #842029;
     }
 
     .warning {
-      background: #804d00 !important;
-    }
-
-    .processing {
-      background: #084298 !important;
+      background: #7a4614;
     }
 
     button {
       width: 100%;
-      padding: 17px;
-      margin-top: 18px;
+      max-width: 500px;
+      min-height: 60px;
       border: none;
-      border-radius: 12px;
+      border-radius: 14px;
       font-size: 18px;
       font-weight: bold;
       color: white;
       background: #dc3545;
+      margin-top: 10px;
     }
 
   </style>
@@ -97,8 +94,6 @@
 
 
 <body>
-
-<div class="container">
 
   <h1>📷 Talatala QR Scanner</h1>
 
@@ -121,8 +116,9 @@
   <div id="reader"></div>
 
 
-  <div id="status"
-       class="processing">
+  <div
+    id="status"
+    class="info">
 
     ⏳ Starting camera...
 
@@ -130,74 +126,93 @@
 
 
   <button
-    type="button"
+    id="closeButton"
     onclick="closeCamera()">
 
     ⛔ CLOSE CAMERA
 
   </button>
 
-</div>
-
 
 <script>
 
 
-/* =================================================
-   VARIABLES
-================================================= */
+/* =====================================================
+   GLOBAL
+===================================================== */
 
 let scanner = null;
 
-let scanned = false;
+let scanning = false;
+
+let alreadyScanned = false;
 
 
-/* =================================================
-   GET RETURN URL
-================================================= */
+/* =====================================================
+   SHOW STATUS
+===================================================== */
 
-const params =
-  new URLSearchParams(
-    window.location.search
-  );
-
-
-const returnUrl =
-  params.get(
-    "returnUrl"
-  );
-
-
-/* =================================================
-   STATUS MESSAGE
-================================================= */
-
-function showStatus(
-  message,
-  type
-) {
+function showStatus(message, type) {
 
   const status =
-    document.getElementById(
-      "status"
-    );
+    document.getElementById("status");
 
-  status.className =
-    type || "";
+  status.className = type;
 
-  status.innerHTML =
-    message;
+  status.innerHTML = message;
 
 }
 
 
-/* =================================================
+/* =====================================================
+   CHECK PARENT WINDOW
+===================================================== */
+
+function checkParentWindow() {
+
+  if (
+    !window.opener ||
+    window.opener.closed
+  ) {
+
+    showStatus(
+      "❌ Walang Attendance page na nakakonekta." +
+      "<br><br>" +
+      "Please CLOSE this camera page." +
+      "<br>" +
+      "Then open the camera using the " +
+      "<b>START LIVE CAMERA</b> button " +
+      "inside the Attendance System.",
+      "error"
+    );
+
+    return false;
+  }
+
+  return true;
+}
+
+
+/* =====================================================
    START CAMERA
-================================================= */
+===================================================== */
 
 function startCamera() {
 
-  if (typeof Html5Qrcode === "undefined") {
+  if (scanning) {
+    return;
+  }
+
+
+  if (!checkParentWindow()) {
+    return;
+  }
+
+
+  if (
+    typeof Html5Qrcode ===
+    "undefined"
+  ) {
 
     showStatus(
       "❌ QR scanner library failed to load." +
@@ -207,6 +222,16 @@ function startCamera() {
 
     return;
   }
+
+
+  scanning = true;
+
+
+  showStatus(
+    "📷 Camera starting..." +
+    "<br>Please allow camera permission.",
+    "info"
+  );
 
 
   scanner =
@@ -220,368 +245,343 @@ function startCamera() {
     fps: 10,
 
     qrbox: function(
-      width,
-      height
+      viewfinderWidth,
+      viewfinderHeight
     ) {
 
-      const size =
+      const minSize =
         Math.min(
-          width,
-          height
-        ) * 0.70;
+          viewfinderWidth,
+          viewfinderHeight
+        );
 
       return {
 
         width:
-          Math.floor(size),
+          Math.floor(
+            minSize * 0.70
+          ),
 
         height:
-          Math.floor(size)
+          Math.floor(
+            minSize * 0.70
+          )
 
       };
 
-    }
+    },
+
+    aspectRatio: 1.0
 
   };
 
 
-  showStatus(
-    "📷 Starting cellphone camera..." +
-    "<br>Please allow camera permission.",
-    "processing"
-  );
-
-
   scanner
-
     .start(
 
       {
-        facingMode:
-          "environment"
+        facingMode: {
+          exact: "environment"
+        }
       },
 
       config,
 
+      onScanSuccess,
 
-      function(decodedText) {
-
-        if (scanned) {
-          return;
-        }
-
-
-        scanned = true;
-
-
-        const learnerId =
-          String(
-            decodedText
-          ).trim();
-
-
-        console.log(
-          "QR CODE:",
-          learnerId
-        );
-
-
-        showStatus(
-          "✅ QR CODE DETECTED!" +
-          "<br><br>" +
-          "Learner ID: <b>" +
-          learnerId +
-          "</b>" +
-          "<br><br>" +
-          "⏳ Returning to Attendance System...",
-          "success"
-        );
-
-
-        stopScannerAndReturn(
-          learnerId
-        );
-
-      },
-
-
-      function(errorMessage) {
-
-        /*
-          Continuous QR scanning errors
-          are normal and are ignored.
-        */
-
-      }
+      onScanError
 
     )
 
+    .then(
+      function() {
 
-    .then(function() {
-
-      showStatus(
-        "📷 CAMERA READY" +
-        "<br><br>" +
-        "Iharap ang camera sa QR Code." +
-        "<br>" +
-        "Ilagay ang QR Code sa loob ng box.",
-        "processing"
-      );
-
-    })
-
-
-    .catch(function(error) {
-
-      console.error(
-        "Camera error:",
-        error
-      );
-
-
-      showStatus(
-        "❌ HINDI MABUKSAN ANG CAMERA." +
-        "<br><br>" +
-        "Please allow camera permission " +
-        "and try again.",
-        "error"
-      );
-
-    });
-
-}
-
-
-/* =================================================
-   STOP CAMERA THEN RETURN
-================================================= */
-
-function stopScannerAndReturn(
-  learnerId
-) {
-
-  if (
-    scanner &&
-    scanner.isScanning
-  ) {
-
-    scanner
-      .stop()
-      .then(function() {
-
-        returnToAttendance(
-          learnerId
+        showStatus(
+          "📷 CAMERA READY" +
+          "<br><br>" +
+          "Iharap ang camera sa QR Code.",
+          "info"
         );
 
-      })
+      }
+    )
 
-      .catch(function(error) {
+    .catch(
+      function(error) {
 
-        console.log(
-          "Stop error:",
+        console.error(
+          "Camera start error:",
           error
         );
 
-        returnToAttendance(
-          learnerId
+
+        scanning = false;
+
+
+        showStatus(
+          "❌ HINDI MABUKSAN ANG CAMERA." +
+          "<br><br>" +
+          "Please allow camera permission " +
+          "and try again.",
+          "error"
         );
 
-      });
-
-  }
-  else {
-
-    returnToAttendance(
-      learnerId
+      }
     );
-
-  }
 
 }
 
 
-/* =================================================
-   RETURN TO ATTENDANCE SYSTEM
-================================================= */
+/* =====================================================
+   QR SCAN SUCCESS
+===================================================== */
 
-function returnToAttendance(
-  learnerId
+function onScanSuccess(
+  decodedText,
+  decodedResult
 ) {
 
-  /*
-    Make sure we have a valid
-    Attendance Web App return URL.
-  */
-
-  if (!returnUrl) {
-
-    showStatus(
-      "❌ Walang Attendance page na nakitang return address." +
-      "<br><br>" +
-      "Please open the camera using the " +
-      "START LIVE CAMERA button sa Attendance System.",
-      "error"
-    );
-
+  if (alreadyScanned) {
     return;
   }
 
 
-  let destination;
+  alreadyScanned = true;
 
 
-  try {
-
-    destination =
-      new URL(
-        returnUrl
-      );
-
-
-    /*
-      Add the scanned Learner ID.
-    */
-
-    destination.searchParams.set(
-      "learnerId",
-      learnerId
-    );
-
-
-  }
-  catch(error) {
-
-    console.error(
-      "Invalid return URL:",
-      error
-    );
-
-
-    showStatus(
-      "❌ Invalid Attendance System address.",
-      "error"
-    );
-
-    return;
-  }
-
-
-  const finalUrl =
-    destination.toString();
+  const learnerId =
+    String(
+      decodedText || ""
+    ).trim();
 
 
   console.log(
-    "RETURNING TO:",
-    finalUrl
+    "QR detected:",
+    learnerId
   );
 
 
+  if (!learnerId) {
+
+    alreadyScanned = false;
+
+    return;
+  }
+
+
+  showStatus(
+    "✅ QR CODE DETECTED!" +
+    "<br><br>" +
+    "<b>Learner ID:</b> " +
+    learnerId +
+    "<br><br>" +
+    "⏳ Sending to Attendance System...",
+    "success"
+  );
+
+
+  stopScanner();
+
+
+  sendLearnerId(
+    learnerId
+  );
+
+}
+
+
+/* =====================================================
+   QR SCAN ERROR
+===================================================== */
+
+function onScanError(errorMessage) {
+
   /*
-    BEST METHOD:
-    If this camera page was opened
-    as a popup, send the result to
-    the original Attendance page.
+     Normal QR scanning produces many
+     "not found" messages.
+
+     We intentionally do nothing here.
   */
+
+}
+
+
+/* =====================================================
+   SEND LEARNER ID TO APPS SCRIPT PAGE
+===================================================== */
+
+function sendLearnerId(
+  learnerId
+) {
+
+  console.log(
+    "Sending learner ID:",
+    learnerId
+  );
+
+
+  /* -----------------------------------------------
+     CHECK PARENT WINDOW
+  ------------------------------------------------ */
+
+  if (
+    !window.opener ||
+    window.opener.closed
+  ) {
+
+    showStatus(
+      "❌ Hindi maipasa ang Learner ID." +
+      "<br><br>" +
+      "Walang Attendance System window." +
+      "<br><br>" +
+      "Please close this page and open the camera " +
+      "from the Attendance System.",
+      "error"
+    );
+
+    return;
+  }
+
+
+  /* -----------------------------------------------
+     SEND MESSAGE TO INDEX.HTML
+  ------------------------------------------------ */
+
+  window.opener.postMessage(
+
+    {
+      type:
+        "TALATALA_QR_RESULT",
+
+      learnerId:
+        learnerId
+    },
+
+    "*"
+
+  );
+
+
+  showStatus(
+    "✅ Learner ID sent!" +
+    "<br><br>" +
+    "Returning to Attendance System...",
+    "success"
+  );
+
+
+  /* -----------------------------------------------
+     CLOSE CAMERA WINDOW
+  ------------------------------------------------ */
+
+  setTimeout(
+    function() {
+
+      try {
+
+        window.close();
+
+      } catch (e) {
+
+        console.log(e);
+
+      }
+
+    },
+    700
+  );
+
+}
+
+
+/* =====================================================
+   STOP SCANNER
+===================================================== */
+
+function stopScanner() {
+
+  if (!scanner) {
+    return;
+  }
+
 
   try {
 
-    if (
-      window.opener &&
-      !window.opener.closed
-    ) {
+    scanner
+      .stop()
 
-      window.opener.location.href =
-        finalUrl;
-
-
-      setTimeout(
+      .then(
         function() {
 
-          window.close();
+          scanning = false;
 
-        },
-        500
+        }
+      )
+
+      .catch(
+        function(error) {
+
+          console.log(
+            "Scanner stop error:",
+            error
+          );
+
+          scanning = false;
+
+        }
       );
 
+  } catch (error) {
 
-      return;
+    console.log(error);
 
-    }
-
-  }
-  catch(error) {
-
-    console.log(
-      "Opener method failed:",
-      error
-    );
+    scanning = false;
 
   }
-
-
-  /*
-    FALLBACK METHOD:
-    If cellphone browser/Messenger
-    does not provide window.opener,
-    directly redirect to Attendance.
-  */
-
-  window.location.href =
-    finalUrl;
 
 }
 
 
-/* =================================================
+/* =====================================================
    CLOSE CAMERA
-================================================= */
+===================================================== */
 
 function closeCamera() {
 
-  if (
-    scanner &&
-    scanner.isScanning
-  ) {
+  stopScanner();
 
-    scanner
-      .stop()
-      .then(function() {
 
-        window.close();
-
-      })
-
-      .catch(function() {
-
-        window.close();
-
-      });
-
-  }
-  else {
+  try {
 
     window.close();
+
+  } catch (e) {
+
+    console.log(e);
 
   }
 
 }
 
 
-/* =================================================
+/* =====================================================
    START WHEN PAGE LOADS
-================================================= */
+===================================================== */
 
 window.addEventListener(
   "load",
   function() {
 
-    startCamera();
+    setTimeout(
+      startCamera,
+      500
+    );
 
   }
 );
 
-
 </script>
 
 </body>
+
 </html>
