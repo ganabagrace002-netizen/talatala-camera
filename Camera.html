@@ -1,274 +1,458 @@
 <!DOCTYPE html>
 <html>
-
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<meta charset="UTF-8">
+  <title>Talatala Learner Attendance</title>
 
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
-<title>Talatala QR Scanner</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-<script
-src="https://unpkg.com/html5-qrcode"
-type="text/javascript">
-</script>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #111827;
+      color: white;
+      text-align: center;
+    }
 
-<style>
+    h2 {
+      margin-top: 5px;
+      margin-bottom: 5px;
+    }
 
-body {
-  margin: 0;
-  padding: 20px;
-  font-family: Arial, sans-serif;
-  background: #111827;
-  color: white;
-  text-align: center;
-}
+    .subtitle {
+      color: #d1d5db;
+      margin-bottom: 15px;
+    }
 
-h2 {
-  margin-bottom: 10px;
-}
+    #reader {
+      width: 100%;
+      max-width: 500px;
+      margin: 15px auto;
+      background: white;
+      border-radius: 15px;
+      overflow: hidden;
+    }
 
-#reader {
-  width: 100%;
-  max-width: 500px;
-  margin: 20px auto;
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-}
+    #status {
+      max-width: 500px;
+      margin: 15px auto;
+      padding: 15px;
+      border-radius: 12px;
+      background: #1f2937;
+      font-size: 16px;
+      white-space: pre-line;
+    }
 
-#status {
-  margin-top: 15px;
-  padding: 15px;
-  border-radius: 10px;
-  background: #1f2937;
-  font-size: 16px;
-}
+    #learnerBox {
+      display: none;
+      max-width: 500px;
+      margin: 15px auto;
+      padding: 20px;
+      background: #ffffff;
+      color: #111827;
+      border-radius: 15px;
+      text-align: left;
+    }
 
-.error {
-  background: #991b1b !important;
-}
+    #learnerBox h3 {
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 15px;
+    }
 
-</style>
+    .info {
+      margin: 8px 0;
+      font-size: 17px;
+    }
 
+    .label {
+      font-weight: bold;
+    }
+
+    button {
+      width: 100%;
+      max-width: 500px;
+      padding: 16px;
+      margin: 8px auto;
+      border: none;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #recordButton {
+      display: none;
+      background: #16a34a;
+      color: white;
+    }
+
+    #scanAgainButton {
+      display: none;
+      background: #2563eb;
+      color: white;
+    }
+
+    #recordButton:active,
+    #scanAgainButton:active {
+      transform: scale(0.98);
+    }
+
+    .success {
+      background: #166534 !important;
+    }
+
+    .error {
+      background: #991b1b !important;
+    }
+
+    .warning {
+      background: #92400e !important;
+    }
+
+    .loading {
+      background: #1e40af !important;
+    }
+  </style>
 </head>
-
 
 <body>
 
-<h2>📷 Talatala QR Scanner</h2>
+  <h2>📷 Talatala Learner Attendance</h2>
 
-<p>
-Itapat ang QR code ng learner sa camera.
-</p>
+  <div class="subtitle">
+    I-scan ang QR code ng learner
+  </div>
 
-<div id="reader"></div>
+  <!-- QR CAMERA -->
+  <div id="reader"></div>
 
-<div id="status">
-Preparing camera...
-</div>
+  <!-- STATUS -->
+  <div id="status">
+    📷 Preparing camera...
+  </div>
+
+  <!-- LEARNER INFORMATION -->
+  <div id="learnerBox">
+
+    <h3>👤 Learner Information</h3>
+
+    <div class="info">
+      <span class="label">Learner ID:</span>
+      <span id="learnerIdDisplay">-</span>
+    </div>
+
+    <div class="info">
+      <span class="label">Status:</span>
+      Ready to record
+    </div>
+
+  </div>
+
+  <!-- RECORD ATTENDANCE BUTTON -->
+  <button id="recordButton" onclick="recordAttendance()">
+    🟢 RECORD ATTENDANCE
+  </button>
+
+  <!-- SCAN AGAIN BUTTON -->
+  <button id="scanAgainButton" onclick="scanAgain()">
+    📷 SCAN AGAIN
+  </button>
 
 
 <script>
 
-const ATTENDANCE_WEB_APP_URL =
-"https://script.google.com/macros/s/AKfycbzn0z2dIIE74T1pEa6PptXkFY-6smpKB0Cj8UP32vwxkHAYvsGi9K-iM-EOF4w0LNc1/exec";
+  /*
+   * YOUR GOOGLE APPS SCRIPT WEB APP
+   */
+  const ATTENDANCE_WEB_APP_URL =
+    "https://script.google.com/macros/s/AKfycbzn0z2dIIE74T1pEa6PptXkFY-6smpKB0Cj8UP32vwxkHAYvsGi9K-iM-EOF4w0LNc1/exec";
 
 
-let scanner = null;
+  let scanner = null;
 
-let alreadyScanned = false;
+  let scannedLearnerId = "";
 
+  let alreadyScanned = false;
 
-/************************************************
- * STATUS
- ************************************************/
+  let recording = false;
 
-function showStatus(
-  message,
-  type
-) {
-
-  const status =
-    document.getElementById(
-      "status"
-    );
-
-
-  status.textContent =
-    message;
-
-
-  status.className =
-    "";
-
-
-  if (type) {
-
-    status.classList.add(
-      type
-    );
-  }
-}
-
-
-/************************************************
- * START CAMERA
- ************************************************/
-
-function startCamera() {
-
-  showStatus(
-    "📷 Starting camera..."
-  );
-
-
-  scanner =
-    new Html5Qrcode(
-      "reader"
-    );
-
-
-  scanner.start(
-
-    {
-      facingMode: "environment"
-    },
-
-    {
-      fps: 10,
-
-      qrbox: {
-        width: 250,
-        height: 250
-      }
-    },
-
-    onScanSuccess,
-
-    onScanError
-
-  )
-
-  .then(function() {
-
-    showStatus(
-      "📷 Camera ready. Scan learner QR."
-    );
-
-  })
-
-  .catch(function(error) {
-
-    console.error(
-      error
-    );
-
-
-    showStatus(
-
-      "❌ Hindi mabuksan ang camera. " +
-      "Please allow camera permission.",
-
-      "error"
-
-    );
-
-  });
-
-}
-
-
-/************************************************
- * QR SUCCESS
- ************************************************/
-
-function onScanSuccess(
-  decodedText
-) {
-
-  if (
-    alreadyScanned
-  ) {
-
-    return;
-  }
-
-
-  alreadyScanned =
-    true;
-
-
-  const learnerId =
-    String(
-      decodedText
-    ).trim();
-
-
-  showStatus(
-
-    "✅ QR detected: " +
-    learnerId +
-    "\nSaving attendance..."
-
-  );
-
-
-  if (scanner) {
-
-    scanner.stop()
-      .catch(function(error) {
-
-        console.log(
-          error
-        );
-
-      });
-  }
-
-
-  /**********************************************
-   * SEND LEARNER ID TO GOOGLE APPS SCRIPT
-   **********************************************/
-
-  const url =
-
-    ATTENDANCE_WEB_APP_URL +
-
-    "?learnerId=" +
-
-    encodeURIComponent(
-      learnerId
-    );
-
-
-  window.location.href =
-    url;
-}
-
-
-/************************************************
- * QR ERROR
- ************************************************/
-
-function onScanError(
-  errorMessage
-) {
 
   /*
-   * Normal QR scanning errors are ignored.
+   * SHOW STATUS
    */
-}
+  function showStatus(message, type) {
+
+    const status = document.getElementById("status");
+
+    status.textContent = message;
+
+    status.className = "";
+
+    if (type) {
+      status.classList.add(type);
+    }
+
+  }
 
 
-/************************************************
- * START
- ************************************************/
+  /*
+   * START CAMERA
+   */
+  function startCamera() {
 
-window.onload =
-  function() {
+    showStatus("📷 Starting camera...", "loading");
+
+    scanner = new Html5Qrcode("reader");
+
+    scanner.start(
+      {
+        facingMode: "environment"
+      },
+      {
+        fps: 10,
+
+        qrbox: {
+          width: 250,
+          height: 250
+        }
+      },
+
+      onScanSuccess,
+
+      onScanError
+
+    )
+    .then(function () {
+
+      showStatus(
+        "📷 Camera ready.\nItapat ang QR code sa camera."
+      );
+
+    })
+    .catch(function (error) {
+
+      console.error(error);
+
+      showStatus(
+        "❌ Hindi mabuksan ang camera.\n\nPlease allow camera permission.",
+        "error"
+      );
+
+    });
+
+  }
+
+
+  /*
+   * QR SCAN SUCCESS
+   */
+  function onScanSuccess(decodedText) {
+
+    if (alreadyScanned) {
+      return;
+    }
+
+    alreadyScanned = true;
+
+    scannedLearnerId = String(decodedText).trim();
+
+    console.log("QR detected:", scannedLearnerId);
+
+
+    /*
+     * STOP CAMERA
+     */
+    if (scanner) {
+
+      scanner.stop()
+        .then(function () {
+
+          console.log("Camera stopped.");
+
+        })
+        .catch(function (error) {
+
+          console.log("Camera stop error:", error);
+
+        });
+
+    }
+
+
+    /*
+     * DISPLAY LEARNER ID
+     */
+    document.getElementById("learnerIdDisplay").textContent =
+      scannedLearnerId;
+
+    document.getElementById("learnerBox").style.display =
+      "block";
+
+
+    /*
+     * SHOW RECORD BUTTON
+     */
+    document.getElementById("recordButton").style.display =
+      "block";
+
+
+    /*
+     * SHOW SCAN AGAIN BUTTON
+     */
+    document.getElementById("scanAgainButton").style.display =
+      "block";
+
+
+    /*
+     * STATUS
+     */
+    showStatus(
+      "✅ QR CODE DETECTED!\n\nLearner ID: " +
+      scannedLearnerId +
+      "\n\nPlease press RECORD ATTENDANCE.",
+      "success"
+    );
+
+  }
+
+
+  /*
+   * QR SCAN ERROR
+   */
+  function onScanError(errorMessage) {
+
+    /*
+     * Ignore normal QR scanning errors.
+     */
+
+  }
+
+
+  /*
+   * RECORD ATTENDANCE
+   */
+  function recordAttendance() {
+
+    if (recording) {
+      return;
+    }
+
+    if (!scannedLearnerId) {
+
+      showStatus(
+        "❌ Walang learner ID na na-scan.",
+        "error"
+      );
+
+      return;
+    }
+
+
+    recording = true;
+
+
+    /*
+     * DISABLE BUTTON
+     */
+    const recordButton =
+      document.getElementById("recordButton");
+
+    recordButton.disabled = true;
+
+    recordButton.textContent =
+      "⏳ RECORDING...";
+
+
+    showStatus(
+      "⏳ Saving attendance...\n\nPlease wait.",
+      "loading"
+    );
+
+
+    /*
+     * OPEN GOOGLE APPS SCRIPT
+     *
+     * The Apps Script doGet()
+     * will call recordAttendance()
+     */
+    const url =
+      ATTENDANCE_WEB_APP_URL +
+      "?learnerId=" +
+      encodeURIComponent(scannedLearnerId);
+
+
+    window.location.href = url;
+
+  }
+
+
+  /*
+   * SCAN AGAIN
+   */
+  function scanAgain() {
+
+    scannedLearnerId = "";
+
+    alreadyScanned = false;
+
+    recording = false;
+
+
+    /*
+     * CLEAR LEARNER INFORMATION
+     */
+    document.getElementById("learnerIdDisplay").textContent =
+      "-";
+
+
+    document.getElementById("learnerBox").style.display =
+      "none";
+
+
+    /*
+     * HIDE BUTTONS
+     */
+    document.getElementById("recordButton").style.display =
+      "none";
+
+
+    document.getElementById("scanAgainButton").style.display =
+      "none";
+
+
+    /*
+     * RESET RECORD BUTTON
+     */
+    const recordButton =
+      document.getElementById("recordButton");
+
+    recordButton.disabled = false;
+
+    recordButton.textContent =
+      "🟢 RECORD ATTENDANCE";
+
+
+    /*
+     * RESTART CAMERA
+     */
+    startCamera();
+
+  }
+
+
+  /*
+   * START WHEN PAGE LOADS
+   */
+  window.onload = function () {
 
     startCamera();
 
@@ -277,5 +461,4 @@ window.onload =
 </script>
 
 </body>
-
 </html>
