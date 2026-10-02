@@ -1,301 +1,109 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
 
-<meta charset="UTF-8">
+  <title>Talatala QR Scanner</title>
 
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
+  <script src="https://unpkg.com/html5-qrcode"
+          type="text/javascript"></script>
 
-<title>Talatala QR Scanner</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #111827;
+      color: white;
+      text-align: center;
+    }
 
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    h2 {
+      margin-bottom: 10px;
+    }
 
-<style>
+    #reader {
+      width: 100%;
+      max-width: 500px;
+      margin: 20px auto;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+    }
 
-* {
-  box-sizing: border-box;
-}
+    #status {
+      margin-top: 15px;
+      padding: 15px;
+      border-radius: 10px;
+      background: #1f2937;
+      font-size: 16px;
+    }
 
-body {
-  margin: 0;
-  padding: 20px;
-  background: #111;
-  color: white;
-  font-family: Arial, sans-serif;
-  text-align: center;
-}
+    .success {
+      background: #166534 !important;
+    }
 
-h1 {
-  font-size: 28px;
-  margin: 10px 0 20px;
-}
-
-.instruction {
-  background: #222;
-  border-radius: 18px;
-  padding: 22px;
-  margin-bottom: 20px;
-  font-size: 18px;
-  line-height: 1.5;
-}
-
-#reader {
-  width: 100%;
-  max-width: 500px;
-  margin: 0 auto 20px;
-  border-radius: 15px;
-  overflow: hidden;
-  background: black;
-}
-
-#status {
-  padding: 18px;
-  border-radius: 14px;
-  margin: 15px 0;
-  font-size: 17px;
-  line-height: 1.5;
-}
-
-.info {
-  background: #333;
-}
-
-.success {
-  background: #146c43;
-}
-
-.error {
-  background: #842029;
-}
-
-.warning {
-  background: #7a4614;
-}
-
-button {
-  width: 100%;
-  max-width: 500px;
-  min-height: 60px;
-  border: none;
-  border-radius: 14px;
-  font-size: 18px;
-  font-weight: bold;
-  color: white;
-  background: #dc3545;
-  margin-top: 10px;
-}
-
-</style>
-
+    .error {
+      background: #991b1b !important;
+    }
+  </style>
 </head>
 
 <body>
 
-<h1>📷 Talatala QR Scanner</h1>
+  <h2>📷 Talatala QR Scanner</h2>
 
-<div class="instruction">
+  <p>Itapat ang QR code ng learner sa camera.</p>
 
-<b>LIVE CAMERA SCANNER</b>
+  <div id="reader"></div>
 
-<br><br>
-
-Iharap ang cellphone camera sa QR Code ng learner.
-
-<br><br>
-
-Kapag nabasa ang QR Code,
-automatic itong ipapasa sa Attendance System.
-
-</div>
-
-<div id="reader"></div>
-
-<div id="status" class="info">
-
-⏳ Starting camera...
-
-</div>
-
-<button id="closeButton"
-        onclick="closeCamera()">
-
-⛔ CLOSE CAMERA
-
-</button>
-
+  <div id="status">
+    Preparing camera...
+  </div>
 
 <script>
 
-/* =====================================================
-   SETTINGS
-===================================================== */
-
-/*
- * IMPORTANT:
- * ILAGAY DITO ANG ACTUAL GOOGLE APPS SCRIPT
- * WEB APP URL NG TALATALA ATTENDANCE SYSTEM.
- *
- * Example:
- *
- * https://script.google.com/macros/s/XXXXXXXXXXXX/exec
- */
-
 const ATTENDANCE_WEB_APP_URL =
-  "PASTE-YOUR-GOOGLE-WEB-APP-URL-HERE";
+  "https://script.google.com/macros/s/AKfycbzn0z2dIIE74T1pEa6PptXkFY-6smpKB0Cj8UP32vwxkHAYvsGi9K-iM-EOF4w0LNc1/exec";
 
-
-/* =====================================================
-   GLOBAL
-===================================================== */
 
 let scanner = null;
-
-let scanning = false;
-
 let alreadyScanned = false;
 
 
-/* =====================================================
-   SHOW STATUS
-===================================================== */
+/************************************************
+ * STATUS
+ ************************************************/
 
 function showStatus(message, type) {
 
   const status =
     document.getElementById("status");
 
-  status.className = type;
+  status.textContent = message;
 
-  status.innerHTML = message;
+  status.className = "";
 
-}
-
-
-/* =====================================================
-   CHECK WEB APP URL
-===================================================== */
-
-function checkWebAppURL() {
-
-  if (
-    !ATTENDANCE_WEB_APP_URL ||
-    ATTENDANCE_WEB_APP_URL.indexOf(
-      "script.google.com"
-    ) === -1
-  ) {
-
-    showStatus(
-
-      "❌ Hindi pa naka-configure ang Attendance Web App URL." +
-
-      "<br><br>" +
-
-      "Pakilagay ang Google Apps Script Web App URL " +
-
-      "sa Camera.html.",
-
-      "error"
-
-    );
-
-    return false;
+  if (type) {
+    status.classList.add(type);
   }
-
-  return true;
-
 }
 
 
-/* =====================================================
-   START CAMERA
-===================================================== */
+/************************************************
+ * START CAMERA
+ ************************************************/
 
 function startCamera() {
 
-  if (scanning) {
-    return;
-  }
-
-  if (!checkWebAppURL()) {
-    return;
-  }
-
-  if (
-    typeof Html5Qrcode ===
-    "undefined"
-  ) {
-
-    showStatus(
-
-      "❌ Hindi nag-load ang QR scanner." +
-
-      "<br><br>" +
-
-      "Please check your internet connection.",
-
-      "error"
-
-    );
-
-    return;
-  }
-
-
-  scanning = true;
-
-
   showStatus(
-
-    "📷 CAMERA STARTING..." +
-
-    "<br><br>" +
-
-    "Please allow camera permission.",
-
-    "info"
-
+    "📷 Starting camera..."
   );
-
 
   scanner =
     new Html5Qrcode("reader");
-
-
-  const config = {
-
-    fps: 10,
-
-    qrbox: function(
-      viewfinderWidth,
-      viewfinderHeight
-    ) {
-
-      const minSize =
-        Math.min(
-          viewfinderWidth,
-          viewfinderHeight
-        );
-
-      return {
-
-        width:
-          Math.floor(
-            minSize * 0.70
-          ),
-
-        height:
-          Math.floor(
-            minSize * 0.70
-          )
-
-      };
-
-    },
-
-    aspectRatio: 1.0
-
-  };
 
 
   scanner.start(
@@ -304,74 +112,45 @@ function startCamera() {
       facingMode: "environment"
     },
 
-    config,
+    {
+      fps: 10,
+
+      qrbox: {
+        width: 250,
+        height: 250
+      }
+    },
 
     onScanSuccess,
 
     onScanError
 
-  )
+  ).then(function() {
 
-  .then(
+    showStatus(
+      "📷 Camera ready. Scan learner QR."
+    );
 
-    function() {
+  }).catch(function(error) {
 
-      showStatus(
+    console.error(error);
 
-        "📷 CAMERA READY" +
+    showStatus(
+      "❌ Hindi mabuksan ang camera. " +
+      "Please allow camera permission.",
+      "error"
+    );
 
-        "<br><br>" +
-
-        "Iharap ang camera sa QR Code.",
-
-        "info"
-
-      );
-
-    }
-
-  )
-
-  .catch(
-
-    function(error) {
-
-      console.error(
-        "Camera error:",
-        error
-      );
-
-      scanning = false;
-
-      showStatus(
-
-        "❌ HINDI MABUKSAN ANG CAMERA." +
-
-        "<br><br>" +
-
-        "Please allow camera permission " +
-
-        "and try again.",
-
-        "error"
-
-      );
-
-    }
-
-  );
+  });
 
 }
 
 
-/* =====================================================
-   QR SUCCESS
-===================================================== */
+/************************************************
+ * QR SUCCESS
+ ************************************************/
 
-function onScanSuccess(
-  decodedText,
-  decodedResult
-) {
+function onScanSuccess(decodedText) {
 
   if (alreadyScanned) {
     return;
@@ -381,227 +160,62 @@ function onScanSuccess(
 
 
   const learnerId =
-    String(
-      decodedText || ""
-    ).trim();
-
-
-  if (!learnerId) {
-
-    alreadyScanned = false;
-
-    return;
-
-  }
-
-
-  console.log(
-    "QR DETECTED:",
-    learnerId
-  );
+    String(decodedText).trim();
 
 
   showStatus(
-
-    "✅ QR CODE DETECTED!" +
-
-    "<br><br>" +
-
-    "<b>Learner ID:</b> " +
-
+    "✅ QR detected: " +
     learnerId +
-
-    "<br><br>" +
-
-    "⏳ Saving attendance..." ,
-
-    "success"
-
+    "\nSaving attendance..."
   );
 
 
-  stopScanner();
-
-
-  sendLearnerId(
-    learnerId
-  );
-
-}
-
-
-/* =====================================================
-   QR ERROR
-===================================================== */
-
-function onScanError(
-  errorMessage
-) {
-
-  // Normal scanning errors are ignored.
-
-}
-
-
-/* =====================================================
-   SEND LEARNER ID
-===================================================== */
-
-function sendLearnerId(
-  learnerId
-) {
-
-  const url =
-
-    ATTENDANCE_WEB_APP_URL +
-
-    "?learnerId=" +
-
-    encodeURIComponent(
-      learnerId
-    );
-
-
-  console.log(
-    "Opening Attendance URL:",
-    url
-  );
-
-
-  showStatus(
-
-    "✅ QR CODE READ!" +
-
-    "<br><br>" +
-
-    "<b>Learner ID:</b> " +
-
-    learnerId +
-
-    "<br><br>" +
-
-    "⏳ Connecting to Attendance System...",
-
-    "success"
-
-  );
-
-
-  setTimeout(
-
-    function() {
-
-      window.location.href = url;
-
-    },
-
-    700
-
-  );
-
-}
-
-
-/* =====================================================
-   STOP SCANNER
-===================================================== */
-
-function stopScanner() {
-
-  if (!scanner) {
-    return;
-  }
-
-
-  try {
+  if (scanner) {
 
     scanner.stop()
-
-      .then(
-
-        function() {
-
-          scanning = false;
-
-        }
-
-      )
-
-      .catch(
-
-        function(error) {
-
-          console.log(
-            "Scanner stop error:",
-            error
-          );
-
-          scanning = false;
-
-        }
-
-      );
+      .catch(function(error) {
+        console.log(error);
+      });
 
   }
 
-  catch (error) {
 
-    console.log(error);
+  /**********************************************
+   * SEND LEARNER ID TO GOOGLE APPS SCRIPT
+   **********************************************/
 
-    scanning = false;
+  const url =
+    ATTENDANCE_WEB_APP_URL +
+    "?learnerId=" +
+    encodeURIComponent(learnerId);
 
-  }
+
+  window.location.href = url;
 
 }
 
 
-/* =====================================================
-   CLOSE
-===================================================== */
+/************************************************
+ * QR SCANNING ERROR
+ ************************************************/
 
-function closeCamera() {
+function onScanError(errorMessage) {
 
-  stopScanner();
-
-  try {
-
-    window.close();
-
-  }
-
-  catch (e) {
-
-    console.log(e);
-
-  }
-
+  // Ignore normal scanning errors.
 }
 
 
-/* =====================================================
-   PAGE LOAD
-===================================================== */
+/************************************************
+ * START
+ ************************************************/
 
-window.addEventListener(
+window.onload = function() {
 
-  "load",
+  startCamera();
 
-  function() {
-
-    setTimeout(
-
-      startCamera,
-
-      500
-
-    );
-
-  }
-
-);
+};
 
 </script>
 
 </body>
-
 </html>
