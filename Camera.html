@@ -6,10 +6,11 @@
 
   <title>Talatala Learner Attendance</title>
 
-  <!-- QR SCANNER LIBRARY -->
+  <!-- QR SCANNER -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
   <style>
+
     * {
       box-sizing: border-box;
     }
@@ -32,7 +33,6 @@
       margin-bottom: 20px;
     }
 
-    /* MAIN BUTTON */
     button {
       width: 100%;
       max-width: 500px;
@@ -50,13 +50,15 @@
       cursor: not-allowed;
     }
 
-    /* SCAN QR BUTTON */
+    /* SCAN BUTTON */
+
     #scanQRButton {
       background: #2563eb;
       color: white;
     }
 
     /* START CAMERA */
+
     #startCameraButton {
       display: none;
       background: #16a34a;
@@ -64,27 +66,15 @@
     }
 
     /* STOP CAMERA */
+
     #stopCameraButton {
       display: none;
       background: #dc2626;
       color: white;
     }
 
-    /* RECORD */
-    #recordButton {
-      display: none;
-      background: #059669;
-      color: white;
-    }
-
-    /* SCAN AGAIN */
-    #scanAgainButton {
-      display: none;
-      background: #7c3aed;
-      color: white;
-    }
-
     /* CAMERA AREA */
+
     #cameraArea {
       display: none;
       width: 100%;
@@ -100,6 +90,7 @@
     }
 
     /* STATUS */
+
     #status {
       max-width: 500px;
       margin: 15px auto;
@@ -126,7 +117,8 @@
       background: #1e40af !important;
     }
 
-    /* LEARNER INFORMATION */
+    /* LAST SCANNED LEARNER */
+
     #learnerBox {
       display: none;
       max-width: 500px;
@@ -151,7 +143,21 @@
     .label {
       font-weight: bold;
     }
+
+    /* CONTINUOUS SCANNING INDICATOR */
+
+    #continuousIndicator {
+      display: none;
+      max-width: 500px;
+      margin: 10px auto;
+      padding: 10px;
+      border-radius: 10px;
+      background: #065f46;
+      font-weight: bold;
+    }
+
   </style>
+
 </head>
 
 <body>
@@ -159,40 +165,63 @@
   <h2>📚 Talatala Learner Attendance</h2>
 
   <div class="subtitle">
-    QR Code Attendance System
+    Automatic QR Attendance System
   </div>
 
 
   <!-- ========================================= -->
-  <!-- STEP 1: SCAN QR CODE BUTTON -->
+  <!-- SCAN QR CODE -->
   <!-- ========================================= -->
 
-  <button id="scanQRButton" onclick="openScanner()">
+  <button
+    id="scanQRButton"
+    onclick="openScanner()">
+
     📷 SCAN QR CODE
+
   </button>
 
 
   <!-- ========================================= -->
-  <!-- CAMERA AREA -->
+  <!-- CAMERA -->
   <!-- ========================================= -->
 
   <div id="cameraArea">
 
     <div id="reader"></div>
 
-    <!-- START CAMERA -->
+
+    <!-- START -->
+
     <button
       id="startCameraButton"
       onclick="startCamera()">
+
       ▶ START CAMERA
+
     </button>
 
-    <!-- STOP CAMERA -->
+
+    <!-- STOP -->
+
     <button
       id="stopCameraButton"
       onclick="stopCamera()">
+
       ⏹ STOP CAMERA
+
     </button>
+
+  </div>
+
+
+  <!-- ========================================= -->
+  <!-- CONTINUOUS SCANNING -->
+  <!-- ========================================= -->
+
+  <div id="continuousIndicator">
+
+    🔄 CONTINUOUS SCANNING ACTIVE
 
   </div>
 
@@ -202,57 +231,54 @@
   <!-- ========================================= -->
 
   <div id="status">
-    Ready. Press SCAN QR CODE.
+
+    Ready.
+
+    Press SCAN QR CODE.
+
   </div>
 
 
   <!-- ========================================= -->
-  <!-- LEARNER INFORMATION -->
+  <!-- LAST LEARNER -->
   <!-- ========================================= -->
 
   <div id="learnerBox">
 
-    <h3>👤 Learner Information</h3>
+    <h3>👤 Last Scanned Learner</h3>
 
     <div class="info">
-      <span class="label">Learner ID:</span>
-      <span id="learnerIdDisplay">-</span>
+
+      <span class="label">
+        Learner ID:
+      </span>
+
+      <span id="learnerIdDisplay">
+        -
+      </span>
+
+    </div>
+
+    <div class="info">
+
+      <span class="label">
+        Attendance:
+      </span>
+
+      <span id="attendanceStatus">
+        -
+      </span>
+
     </div>
 
   </div>
-
-
-  <!-- ========================================= -->
-  <!-- RECORD ATTENDANCE -->
-  <!-- ========================================= -->
-
-  <button
-    id="recordButton"
-    onclick="recordAttendance()">
-
-    🟢 RECORD ATTENDANCE
-
-  </button>
-
-
-  <!-- ========================================= -->
-  <!-- SCAN AGAIN -->
-  <!-- ========================================= -->
-
-  <button
-    id="scanAgainButton"
-    onclick="scanAgain()">
-
-    🔄 SCAN AGAIN
-
-  </button>
 
 
 <script>
 
 
 /* =====================================================
-   GOOGLE APPS SCRIPT WEB APP URL
+   GOOGLE APPS SCRIPT WEB APP
    ===================================================== */
 
 const ATTENDANCE_WEB_APP_URL =
@@ -265,17 +291,32 @@ const ATTENDANCE_WEB_APP_URL =
 
 let scanner = null;
 
-let scannedLearnerId = "";
-
 let cameraRunning = false;
 
-let alreadyScanned = false;
+let alreadyProcessing = false;
 
-let recording = false;
+
+/*
+ * Prevent duplicate scanning of the same QR
+ */
+
+let lastScannedId = "";
+
+let lastScanTime = 0;
+
+
+/*
+ * Cooldown in milliseconds
+ *
+ * Same QR cannot be processed repeatedly
+ * within this time.
+ */
+
+const SAME_QR_COOLDOWN = 5000;
 
 
 /* =====================================================
-   STATUS FUNCTION
+   STATUS
    ===================================================== */
 
 function showStatus(message, type) {
@@ -288,53 +329,42 @@ function showStatus(message, type) {
   status.className = "";
 
   if (type) {
+
     status.classList.add(type);
+
   }
 
 }
 
 
 /* =====================================================
-   STEP 1
    OPEN SCANNER
    ===================================================== */
 
 function openScanner() {
 
-  /*
-   * Show camera area
-   */
-
-  document.getElementById("cameraArea").style.display =
-    "block";
+  document.getElementById(
+    "cameraArea"
+  ).style.display = "block";
 
 
-  /*
-   * Hide SCAN QR button
-   */
-
-  document.getElementById("scanQRButton").style.display =
-    "none";
+  document.getElementById(
+    "scanQRButton"
+  ).style.display = "none";
 
 
-  /*
-   * Show START CAMERA button
-   */
-
-  document.getElementById("startCameraButton").style.display =
-    "block";
+  document.getElementById(
+    "startCameraButton"
+  ).style.display = "block";
 
 
-  /*
-   * Hide STOP button initially
-   */
-
-  document.getElementById("stopCameraButton").style.display =
-    "none";
+  document.getElementById(
+    "stopCameraButton"
+  ).style.display = "none";
 
 
   showStatus(
-    "📷 Camera is ready.\n\nPress START CAMERA.",
+    "📷 Camera ready.\n\nPress START CAMERA.",
     "warning"
   );
 
@@ -347,20 +377,11 @@ function openScanner() {
 
 function startCamera() {
 
-  /*
-   * Prevent duplicate camera
-   */
-
   if (cameraRunning) {
+
     return;
+
   }
-
-
-  /*
-   * Reset scanning
-   */
-
-  alreadyScanned = false;
 
 
   showStatus(
@@ -369,16 +390,9 @@ function startCamera() {
   );
 
 
-  /*
-   * Create QR scanner
-   */
+  scanner =
+    new Html5Qrcode("reader");
 
-  scanner = new Html5Qrcode("reader");
-
-
-  /*
-   * Start rear camera
-   */
 
   scanner.start(
 
@@ -407,26 +421,25 @@ function startCamera() {
     cameraRunning = true;
 
 
-    /*
-     * Hide START
-     */
-
     document.getElementById(
       "startCameraButton"
     ).style.display = "none";
 
-
-    /*
-     * Show STOP
-     */
 
     document.getElementById(
       "stopCameraButton"
     ).style.display = "block";
 
 
+    document.getElementById(
+      "continuousIndicator"
+    ).style.display = "block";
+
+
     showStatus(
-      "📷 CAMERA RUNNING\n\nItapat ang QR code ng learner.",
+      "📷 CAMERA RUNNING\n\n" +
+      "Scan the learner QR code.\n\n" +
+      "Attendance will be recorded automatically.",
       "success"
     );
 
@@ -438,8 +451,10 @@ function startCamera() {
 
     cameraRunning = false;
 
+
     showStatus(
-      "❌ Hindi mabuksan ang camera.\n\nPlease allow camera permission and try again.",
+      "❌ Hindi mabuksan ang camera.\n\n" +
+      "Please allow camera permission and try again.",
       "error"
     );
 
@@ -456,11 +471,6 @@ function stopCamera() {
 
   if (!scanner || !cameraRunning) {
 
-    showStatus(
-      "Camera is not running.",
-      "warning"
-    );
-
     return;
 
   }
@@ -473,22 +483,19 @@ function stopCamera() {
       cameraRunning = false;
 
 
-      /*
-       * Hide STOP
-       */
-
       document.getElementById(
         "stopCameraButton"
       ).style.display = "none";
 
 
-      /*
-       * Show START
-       */
-
       document.getElementById(
         "startCameraButton"
       ).style.display = "block";
+
+
+      document.getElementById(
+        "continuousIndicator"
+      ).style.display = "none";
 
 
       showStatus(
@@ -510,122 +517,221 @@ function stopCamera() {
 
 
 /* =====================================================
-   QR SCAN SUCCESS
+   QR SCANNED
    ===================================================== */
 
 function onScanSuccess(decodedText) {
 
-  /*
-   * Prevent multiple scans
-   */
-
-  if (alreadyScanned) {
-    return;
-  }
-
-
-  alreadyScanned = true;
-
-
-  /*
-   * Get learner ID
-   */
-
-  scannedLearnerId =
+  const learnerId =
     String(decodedText).trim();
 
 
-  console.log(
-    "QR detected:",
-    scannedLearnerId
-  );
+  if (!learnerId) {
 
-
-  /*
-   * STOP CAMERA AUTOMATICALLY
-   */
-
-  if (scanner && cameraRunning) {
-
-    scanner.stop()
-
-      .then(function () {
-
-        cameraRunning = false;
-
-
-        document.getElementById(
-          "stopCameraButton"
-        ).style.display = "none";
-
-
-        document.getElementById(
-          "startCameraButton"
-        ).style.display = "none";
-
-      })
-
-      .catch(function (error) {
-
-        console.log(error);
-
-      });
+    return;
 
   }
 
 
   /*
-   * DISPLAY LEARNER ID
+   * Prevent duplicate processing
+   */
+
+  const now =
+    Date.now();
+
+
+  if (
+    learnerId === lastScannedId &&
+    (now - lastScanTime) < SAME_QR_COOLDOWN
+  ) {
+
+    return;
+
+  }
+
+
+  /*
+   * If another learner is currently being
+   * processed, ignore additional scans
+   * for the moment.
+   */
+
+  if (alreadyProcessing) {
+
+    return;
+
+  }
+
+
+  alreadyProcessing = true;
+
+
+  lastScannedId = learnerId;
+
+  lastScanTime = now;
+
+
+  /*
+   * Display learner
    */
 
   document.getElementById(
     "learnerIdDisplay"
   ).textContent =
-    scannedLearnerId;
+    learnerId;
 
 
-  /*
-   * SHOW LEARNER BOX
-   */
+  document.getElementById(
+    "attendanceStatus"
+  ).textContent =
+    "Saving...";
+
 
   document.getElementById(
     "learnerBox"
-  ).style.display = "block";
+  ).style.display =
+    "block";
 
-
-  /*
-   * SHOW RECORD BUTTON
-   */
-
-  document.getElementById(
-    "recordButton"
-  ).style.display = "block";
-
-
-  /*
-   * SHOW SCAN AGAIN
-   */
-
-  document.getElementById(
-    "scanAgainButton"
-  ).style.display = "block";
-
-
-  /*
-   * STATUS
-   */
 
   showStatus(
-
-    "✅ QR CODE DETECTED!\n\n" +
+    "✅ QR DETECTED\n\n" +
     "Learner ID: " +
-    scannedLearnerId +
+    learnerId +
     "\n\n" +
-    "Press RECORD ATTENDANCE.",
-
-    "success"
-
+    "⏳ Recording attendance...",
+    "loading"
   );
+
+
+  /*
+   * AUTOMATICALLY RECORD
+   */
+
+  recordAttendanceAutomatically(
+    learnerId
+  );
+
+}
+
+
+/* =====================================================
+   AUTOMATIC ATTENDANCE
+   ===================================================== */
+
+function recordAttendanceAutomatically(
+  learnerId
+) {
+
+
+  /*
+   * Build Apps Script URL
+   */
+
+  const url =
+    ATTENDANCE_WEB_APP_URL +
+    "?learnerId=" +
+    encodeURIComponent(learnerId);
+
+
+  /*
+   * Send request without leaving
+   * the camera page.
+   */
+
+  fetch(url, {
+
+    method: "GET",
+
+    redirect: "follow"
+
+  })
+
+  .then(function(response) {
+
+    return response.text();
+
+  })
+
+  .then(function(result) {
+
+
+    console.log(
+      "Attendance response:",
+      result
+    );
+
+
+    /*
+     * Display result
+     */
+
+    document.getElementById(
+      "attendanceStatus"
+    ).textContent =
+      "Recorded";
+
+
+    showStatus(
+      "✅ ATTENDANCE RECORDED\n\n" +
+      "Learner ID: " +
+      learnerId +
+      "\n\n" +
+      "📷 Ready for next learner.",
+      "success"
+    );
+
+
+    /*
+     * Allow next QR
+     */
+
+    setTimeout(function() {
+
+      alreadyProcessing = false;
+
+      showStatus(
+        "📷 READY FOR NEXT LEARNER\n\n" +
+        "Scan the next QR code.",
+        "success"
+      );
+
+    }, 1000);
+
+  })
+
+  .catch(function(error) {
+
+
+    console.error(
+      "Attendance error:",
+      error
+    );
+
+
+    document.getElementById(
+      "attendanceStatus"
+    ).textContent =
+      "Error";
+
+
+    showStatus(
+      "❌ ATTENDANCE ERROR\n\n" +
+      "Learner ID: " +
+      learnerId +
+      "\n\n" +
+      "Please try scanning again.",
+      "error"
+    );
+
+
+    /*
+     * Allow another scan
+     */
+
+    alreadyProcessing = false;
+
+  });
 
 }
 
@@ -637,182 +743,8 @@ function onScanSuccess(decodedText) {
 function onScanError(errorMessage) {
 
   /*
-   * Normal scanning errors are ignored.
+   * Normal QR scanning errors are ignored.
    */
-
-}
-
-
-/* =====================================================
-   RECORD ATTENDANCE
-   ===================================================== */
-
-function recordAttendance() {
-
-  /*
-   * Prevent duplicate recording
-   */
-
-  if (recording) {
-    return;
-  }
-
-
-  /*
-   * Check learner ID
-   */
-
-  if (!scannedLearnerId) {
-
-    showStatus(
-      "❌ Walang learner ID na na-scan.",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  recording = true;
-
-
-  /*
-   * Disable record button
-   */
-
-  const recordButton =
-    document.getElementById(
-      "recordButton"
-    );
-
-
-  recordButton.disabled = true;
-
-
-  recordButton.textContent =
-    "⏳ RECORDING...";
-
-
-  showStatus(
-    "⏳ Saving attendance...\n\nPlease wait...",
-    "loading"
-  );
-
-
-  /*
-   * SEND TO GOOGLE APPS SCRIPT
-   */
-
-  const url =
-    ATTENDANCE_WEB_APP_URL +
-    "?learnerId=" +
-    encodeURIComponent(
-      scannedLearnerId
-    );
-
-
-  /*
-   * Open Apps Script
-   */
-
-  window.location.href = url;
-
-}
-
-
-/* =====================================================
-   SCAN AGAIN
-   ===================================================== */
-
-function scanAgain() {
-
-  /*
-   * Reset variables
-   */
-
-  scannedLearnerId = "";
-
-  alreadyScanned = false;
-
-  recording = false;
-
-
-  /*
-   * Clear learner ID
-   */
-
-  document.getElementById(
-    "learnerIdDisplay"
-  ).textContent = "-";
-
-
-  /*
-   * Hide learner information
-   */
-
-  document.getElementById(
-    "learnerBox"
-  ).style.display = "none";
-
-
-  /*
-   * Hide record button
-   */
-
-  document.getElementById(
-    "recordButton"
-  ).style.display = "none";
-
-
-  /*
-   * Hide scan again
-   */
-
-  document.getElementById(
-    "scanAgainButton"
-  ).style.display = "none";
-
-
-  /*
-   * Reset record button
-   */
-
-  const recordButton =
-    document.getElementById(
-      "recordButton"
-    );
-
-
-  recordButton.disabled = false;
-
-
-  recordButton.textContent =
-    "🟢 RECORD ATTENDANCE";
-
-
-  /*
-   * Show SCAN QR CODE button
-   */
-
-  document.getElementById(
-    "scanQRButton"
-  ).style.display = "block";
-
-
-  /*
-   * Hide camera area
-   */
-
-  document.getElementById(
-    "cameraArea"
-  ).style.display = "none";
-
-
-  showStatus(
-    "Ready.\n\nPress SCAN QR CODE.",
-    "success"
-  );
 
 }
 
@@ -821,7 +753,7 @@ function scanAgain() {
    PAGE LOAD
    ===================================================== */
 
-window.onload = function () {
+window.onload = function() {
 
   showStatus(
     "Ready.\n\nPress SCAN QR CODE."
