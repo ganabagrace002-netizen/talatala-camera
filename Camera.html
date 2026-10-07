@@ -619,9 +619,22 @@ function onScanSuccess(decodedText) {
    AUTOMATIC ATTENDANCE
    ===================================================== */
 
-function recordAttendanceAutomatically(
-  learnerId
-) {
+function recordAttendanceAutomatically(learnerId) {
+
+  learnerId = String(learnerId || "").trim();
+
+  if (!learnerId) {
+
+    alreadyProcessing = false;
+
+    showStatus(
+      "❌ WALANG LEARNER ID.\n\n" +
+      "Please scan the QR code again.",
+      "error"
+    );
+
+    return;
+  }
 
 
   /*
@@ -635,103 +648,32 @@ function recordAttendanceAutomatically(
 
 
   /*
-   * Send request without leaving
-   * the camera page.
+   * Show processing message
    */
 
-  fetch(url, {
-
-    method: "GET",
-
-    redirect: "follow"
-
-  })
-
-  .then(function(response) {
-
-    return response.text();
-
-  })
-
-  .then(function(result) {
+  showStatus(
+    "⏳ SAVING ATTENDANCE...\n\n" +
+    "Learner ID: " +
+    learnerId +
+    "\n\n" +
+    "Please wait...",
+    "loading"
+  );
 
 
-    console.log(
-      "Attendance response:",
-      result
-    );
+  /*
+   * IMPORTANT:
+   *
+   * Do NOT use fetch() here.
+   *
+   * The GitHub Pages camera page and
+   * Google Apps Script are different domains.
+   *
+   * Direct navigation allows Google Apps Script
+   * to process the attendance normally.
+   */
 
-
-    /*
-     * Display result
-     */
-
-    document.getElementById(
-      "attendanceStatus"
-    ).textContent =
-      "Recorded";
-
-
-    showStatus(
-      "✅ ATTENDANCE RECORDED\n\n" +
-      "Learner ID: " +
-      learnerId +
-      "\n\n" +
-      "📷 Ready for next learner.",
-      "success"
-    );
-
-
-    /*
-     * Allow next QR
-     */
-
-    setTimeout(function() {
-
-      alreadyProcessing = false;
-
-      showStatus(
-        "📷 READY FOR NEXT LEARNER\n\n" +
-        "Scan the next QR code.",
-        "success"
-      );
-
-    }, 1000);
-
-  })
-
-  .catch(function(error) {
-
-
-    console.error(
-      "Attendance error:",
-      error
-    );
-
-
-    document.getElementById(
-      "attendanceStatus"
-    ).textContent =
-      "Error";
-
-
-    showStatus(
-      "❌ ATTENDANCE ERROR\n\n" +
-      "Learner ID: " +
-      learnerId +
-      "\n\n" +
-      "Please try scanning again.",
-      "error"
-    );
-
-
-    /*
-     * Allow another scan
-     */
-
-    alreadyProcessing = false;
-
-  });
+  window.top.location.href = url;
 
 }
 
