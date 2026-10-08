@@ -752,36 +752,29 @@ function recordAttendanceAutomatically(learnerId) {
 
 window.androidAttendanceResult = function(success, message) {
 
-  alreadyProcessing = false;
+    console.log("Android attendance result:", success, message);
 
-  const attendanceStatus =
-    document.getElementById("attendanceStatus");
+    // Allow the next QR scan
+    alreadyProcessing = false;
 
-  if (success) {
+    if (success) {
 
-    attendanceStatus.textContent = "Recorded";
+        showStatus(
+            "✅ ATTENDANCE RECORDED\n\n" + message,
+            "success"
+        );
 
-    showStatus(
-      "✅ ATTENDANCE RECORDED\n\n" +
-      "Learner ID: " +
-      (document.getElementById("learnerIdDisplay").textContent || "-") +
-      "\n\n" +
-      (message || "Saved to Google Sheet."),
-      "success"
-    );
+    } else {
 
-  } else {
+        showStatus(
+            "❌ ATTENDANCE FAILED\n\n" + message,
+            "error"
+        );
+    }
 
-    attendanceStatus.textContent = "Failed";
-
-    showStatus(
-      "❌ ATTENDANCE FAILED\n\n" +
-      (message || "Unable to save attendance."),
-      "error"
-    );
-  }
+    // Keep the QR scanner page open.
+    // DO NOT use window.location.href here.
 };
-
 
 /* =====================================================
    QR SCAN ERROR
