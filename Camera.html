@@ -646,20 +646,6 @@ function recordAttendanceAutomatically(learnerId) {
   }
 
 
-  /*
-   * Build Apps Script URL
-   */
-
-  const url =
-    ATTENDANCE_WEB_APP_URL +
-    "?learnerId=" +
-    encodeURIComponent(learnerId);
-
-
-  /*
-   * Show processing message
-   */
-
   showStatus(
     "⏳ SAVING ATTENDANCE...\n\n" +
     "Learner ID: " +
@@ -672,18 +658,41 @@ function recordAttendanceAutomatically(learnerId) {
 
   /*
    * ANDROID APP
-   * Send the attendance through the native Android bridge.
-   * This keeps the camera page open.
+   *
+   * Send attendance directly to
+   * the Android native bridge.
    */
   if (
-    typeof AndroidBridge !== "undefined" &&
-    typeof AndroidBridge.recordAttendance === "function"
+    window.AndroidBridge &&
+    typeof window.AndroidBridge.recordAttendance === "function"
   ) {
 
-    AndroidBridge.recordAttendance(learnerId);
+    console.log(
+      "Sending attendance to Android:",
+      learnerId
+    );
+
+    window.AndroidBridge.recordAttendance(
+      learnerId
+    );
+
     return;
   }
 
+
+  /*
+   * BROWSER FALLBACK
+   *
+   * Used only when Camera.html is opened
+   * outside the Android app.
+   */
+  const url =
+    ATTENDANCE_WEB_APP_URL +
+    "?learnerId=" +
+    encodeURIComponent(learnerId);
+
+  window.location.href = url;
+}
 
   /*
    * NORMAL BROWSER FALLBACK
