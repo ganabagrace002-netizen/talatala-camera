@@ -709,28 +709,30 @@ function recordAttendanceAutomatically(learnerId) {
 
 window.androidAttendanceResult = function(success, message) {
 
-    console.log("Android attendance result:", success, message);
+    console.log(
+        "Android attendance result:",
+        success,
+        message
+    );
 
-    // Allow the next QR scan
     alreadyProcessing = false;
 
     if (success) {
 
         showStatus(
-            "✅ ATTENDANCE RECORDED\n\n" + message,
+            "✅ ATTENDANCE RECORDED\n\n" +
+            "The attendance request was sent successfully.",
             "success"
         );
 
     } else {
 
         showStatus(
-            "❌ ATTENDANCE FAILED\n\n" + message,
+            "❌ ATTENDANCE FAILED\n\n" +
+            String(message || "Unable to record attendance."),
             "error"
         );
     }
-
-    // Keep the QR scanner page open.
-    // DO NOT use window.location.href here.
 };
 
 /* =====================================================
