@@ -695,58 +695,6 @@ function recordAttendanceAutomatically(learnerId) {
 }
 
   /*
-   * NORMAL BROWSER FALLBACK
-   * Submit the GET request through the hidden iframe so the
-   * camera page does not navigate away.
-   */
-  const frame = document.getElementById("attendanceFrame");
-
-  if (frame) {
-
-    const form = document.createElement("form");
-    form.method = "GET";
-    form.action = ATTENDANCE_WEB_APP_URL;
-    form.target = "attendanceFrame";
-    form.style.display = "none";
-
-    const input = document.createElement("input");
-    input.type = "hidden";
-    input.name = "learnerId";
-    input.value = learnerId;
-
-    form.appendChild(input);
-    document.body.appendChild(form);
-    form.submit();
-
-    setTimeout(function() {
-
-      alreadyProcessing = false;
-
-      document.getElementById("attendanceStatus").textContent =
-        "Request sent";
-
-      showStatus(
-        "✅ Attendance request sent.
-
-" +
-        "Learner ID: " + learnerId,
-        "success"
-      );
-
-      form.remove();
-
-    }, 2500);
-
-    return;
-  }
-
-
-  alreadyProcessing = false;
-
-  showStatus(
-    "❌ Attendance request could not be sent.",
-    "error"
-  );
 
 }
 
