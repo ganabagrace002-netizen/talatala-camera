@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>SC-MED TRACK — Secure QR Scanner</title>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    :root{font-family:Arial,sans-serif;color:#182b36;background:#f3f6f8}*{box-sizing:border-box}body{margin:0;padding:16px}.wrap{max-width:600px;margin:2vh auto;background:#fff;border:1px solid #dce4e9;border-radius:14px;padding:20px;box-shadow:0 2px 8px #17324d0d}h1{font-size:22px;margin:0 0 8px;color:#12304a}p{line-height:1.45}.muted{color:#5d6d76;font-size:14px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}button{border:0;border-radius:8px;padding:12px 15px;font-weight:bold;background:#176b87;color:white;cursor:pointer}button.secondary{background:#e8eef2;color:#203846}button:disabled{opacity:.5}#reader{width:100%;max-width:500px;margin:12px auto;min-height:180px}.notice{padding:12px;border-radius:8px;margin-top:12px;white-space:pre-wrap;background:#fff6df;color:#785300}.error{background:#fff0ef;color:#98251d}.success{background:#e8f7ef;color:#12633d}input{font:inherit;padding:11px;width:100%;border:1px solid #cbd5dc;border-radius:8px}label{display:block;font-weight:bold;margin:12px 0 5px}@media(max-width:480px){body{padding:8px}.wrap{padding:14px}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>SC-MED TRACK</h1>
+    <p><strong>Secure QR Scanner</strong></p>
+    <p class="muted">This page opens the camera outside the Google Apps Script embedded document. Scan a senior citizen QR code to send its ID back to the SC-MED TRACK tab you opened this page from.</p>
+    <div class="actions">
+      <button id="startBtn" type="button">Open Camera</button>
+      <button id="stopBtn" class="secondary" type="button" disabled>Stop Camera</button>
+    </div>
+    <div id="reader"></div>
+    <label for="manualId">Or enter Senior Citizen ID manually</label>
+    <input id="manualId" placeholder="Example: 12 or SC-12" autocomplete="off">
+    <div class="actions"><button id="sendBtn" type="button">Send ID to SC-MED TRACK</button></div>
+    <div id="status" class="notice">Press Open Camera and allow camera access when Chrome asks.</div>
+  </main>
+<script>
+(() => {
+  let scanner = null;
+  const statusEl = document.getElementById('status');
+  const startBtn = document.getElementById('startBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  function status(text, level='') { statusEl.className = 'notice' + (level ? ' ' + level : ''); statusEl.textContent = text; try { if (window.opener && !window.opener.closed) window.opener.postMessage({type:'SC_MED_TRACK_SCANNER_STATUS',message:text,level}, '*'); } catch(e) {} }
+  function sendId(raw) {
+    const id = String(raw || '').trim();
+    if (!id || id.length > 120) { status('Please scan a QR code or enter a valid Senior Citizen ID.', 'error'); return; }
+    if (!window.opener || window.opener.closed) { status('The SC-MED TRACK tab is not available. Keep SC-MED TRACK open, then reopen this scanner from that tab.', 'error'); return; }
+    try { window.opener.postMessage({type:'SC_MED_TRACK_QR_RESULT', id:id}, '*'); status('ID sent. Returning to SC-MED TRACK…', 'success'); setTimeout(() => window.close(), 350); }
+    catch(e) { status('Could not return the ID: ' + (e.message || e), 'error'); }
+  }
+  async function stopCamera() { if (!scanner) return; try { if (scanner.isScanning) await scanner.stop(); await scanner.clear(); } catch(e) {} scanner = null; stopBtn.disabled = true; startBtn.disabled = false; }
+  async function startCamera() {
+    if (!window.isSecureContext) { status('Camera requires a secure HTTPS page. Make sure GitHub Pages is enabled and this URL begins with https://.', 'error'); return; }
+    if (!window.Html5Qrcode) { status('Scanner library did not load. Check internet access and reload this page.', 'error'); return; }
+    startBtn.disabled = true;
+    try {
+      await stopCamera(); scanner = new Html5Qrcode('reader');
+      const config = {fps:10, qrbox:{width:240,height:240}, aspectRatio:1.0};
+      const decoded = async text => { await stopCamera(); document.getElementById('manualId').value = String(text || '').trim(); sendId(text); };
+      try { await scanner.start({facingMode:{ideal:'environment'}}, config, decoded, () => {}); }
+      catch(firstError) {
+        if (firstError && (firstError.name === 'NotAllowedError' || /permission denied|notallowederror/i.test(String(firstError.message || firstError)))) throw firstError;
+        const cams = await Html5Qrcode.getCameras(); if (!cams || !cams.length) throw new Error('No camera detected.');
+        await scanner.start(cams[cams.length-1].id, config, decoded, () => {});
+      }
+      stopBtn.disabled = false; startBtn.disabled = false; status('Camera active. Point it at the senior citizen QR code.', 'success');
+    } catch(e) {
+      const name = e && e.name || ''; const detail = String(e && e.message || e);
+      if (name === 'NotAllowedError' || /permission denied|notallowederror/i.test(detail)) status('Camera permission was denied for this GitHub Pages site. Tap the site icon beside the address bar, set Camera to Allow, reload, and try again. Also check device camera privacy settings.', 'error');
+      else status('Cannot open camera: ' + detail, 'error');
+      await stopCamera(); startBtn.disabled = false; console.error('SC-MED TRACK secure scanner error:', e);
+    }
+  }
+  startBtn.addEventListener('click', startCamera);
+  stopBtn.addEventListener('click', stopCamera);
+  document.getElementById('sendBtn').addEventListener('click', () => sendId(document.getElementById('manualId').value));
+  window.addEventListener('beforeunload', () => { try { if (scanner && scanner.isScanning) scanner.stop(); } catch(e) {} });
+})();
+</script>
+</body>
+</html>

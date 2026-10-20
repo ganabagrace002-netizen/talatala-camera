@@ -1,0 +1,1686 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SC-MED TRACK</title>
+
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+  <style>
+    :root {
+      --navy: #12304a;
+      --blue: #176b87;
+      --green: #14866d;
+      --bg: #f3f6f8;
+      --line: #dce4e9;
+      --red: #b42318;
+      --gold: #9a6700;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: #182b36;
+    }
+
+    header {
+      background: var(--navy);
+      color: white;
+      padding: 17px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    header h1 { margin: 0; font-size: 22px; }
+    header small { opacity: .85; }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 16px;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      padding: 17px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 7px #17324d0a;
+    }
+
+    .hidden { display: none !important; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+    }
+
+    .stat {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 27px;
+      color: var(--blue);
+      margin-bottom: 5px;
+    }
+
+    h2 { font-size: 20px; }
+    h3 { font-size: 17px; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: bold;
+      margin: 11px 0 5px;
+    }
+
+    input, select, textarea, button {
+      font: inherit;
+    }
+
+    .remember-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 13px 0 6px;
+      font-weight: normal;
+      cursor: pointer;
+    }
+    .remember-row input {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      accent-color: var(--blue);
+      flex: 0 0 auto;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #cbd5dc;
+      border-radius: 8px;
+      background: white;
+    }
+
+    textarea {
+      min-height: 70px;
+      resize: vertical;
+    }
+
+    button {
+      padding: 10px 14px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--blue);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: #e8eef2;
+      color: #203846;
+    }
+
+    button.danger { background: var(--red); }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 13px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 12px 0 16px;
+    }
+
+    .tabs button {
+      background: #dce8ed;
+      color: #173849;
+    }
+
+    .tabs button.active {
+      background: var(--navy);
+      color: white;
+    }
+
+    .notice {
+      padding: 12px;
+      border-radius: 8px;
+      margin: 10px 0;
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
+
+    .success { background: #e8f7ef; color: #12633d; }
+    .error { background: #fff0ef; color: #98251d; }
+    .warning { background: #fff6df; color: #785300; }
+
+    .muted {
+      color: #5d6d76;
+      font-size: 13px;
+    }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+
+    th { background: #f5f8fa; }
+
+    .pill {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 4px 9px;
+      background: #e6f3f7;
+      color: #15536a;
+      font-size: 12px;
+    }
+
+    .login {
+      max-width: 420px;
+      margin: 7vh auto;
+    }
+
+    .medicine-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 14px; }
+    .checkline { display:flex; align-items:center; gap:8px; font-weight:normal; margin:7px 0; }
+    .checkline input { width:auto; }
+    .medicine-item { border:1px solid var(--line); padding:10px; border-radius:8px; }
+    .medicine-item input[type="number"] { margin-top:6px; }
+    .medicine-select { width:100%; padding:12px; border:1px solid var(--line); border-radius:9px; font-size:16px; background:#fff; margin:8px 0 12px; }
+    .medicine-detail { border:1px solid var(--line); border-radius:10px; padding:14px; margin-top:10px; }
+    .person {
+      background: #eef8f5;
+      border: 1px solid #c9e9dd;
+      border-radius: 10px;
+      padding: 15px;
+      margin-top: 12px;
+    }
+
+    #reader {
+      width: 100%;
+      max-width: 450px;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 700px) {
+      .grid, .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .container { padding: 10px; }
+      .card { padding: 12px; }
+      header { padding: 14px; }
+      header h1 { font-size: 18px; }
+    }
+
+    @media (max-width: 440px) {
+      .grid, .stats { grid-template-columns: 1fr; }
+    }
+
+    @media print {
+      header, .tabs, .no-print, button { display: none !important; }
+      .container { max-width: none; padding: 0; }
+      .card { box-shadow: none; }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div>
+    <h1>SC-MED TRACK</h1>
+    <small>Senior Citizen Maintenance Medicine Monitoring</small>
+  </div>
+  <div id="userArea" class="hidden">
+    <span id="currentUser"></span>
+    <button class="secondary" onclick="logout()">Sign out</button>
+  </div>
+</header>
+
+<!-- LOGIN -->
+<div id="loginView" class="container">
+  <div class="card login">
+    <h2>Secure Login</h2>
+    <p class="muted">For authorized personnel only.</p>
+    <div id="loginMessage"></div>
+
+    <form onsubmit="login(event)">
+      <label>Username</label>
+      <input id="username" autocomplete="username" required>
+
+      <label>Password</label>
+      <input id="password" type="password"
+             autocomplete="current-password" required>
+
+      <label class="remember-row" for="rememberUsername">
+        <input id="rememberUsername" type="checkbox" autocomplete="off">
+        <span>Remember Username on this device</span>
+      </label>
+      <label class="remember-row" for="rememberPassword">
+        <input id="rememberPassword" type="checkbox" autocomplete="off">
+        <span>Remember Password on this device (private device only)</span>
+      </label>
+      <p class="muted">Security note: saved passwords are stored in this browser on this device. Do not enable this on a shared/public computer.</p>
+
+      <div class="actions">
+        <button type="submit">Sign in</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- APPLICATION -->
+<div id="appView" class="container hidden">
+
+  <div id="globalMessage"></div>
+
+  <section id="passwordPanel" class="card hidden">
+    <h2>Change Temporary Password</h2>
+
+    <label>Current password</label>
+    <input id="oldPassword" type="password">
+
+    <label>New password (at least 10 characters)</label>
+    <input id="newPassword" type="password" minlength="10">
+
+    <div class="actions">
+      <button onclick="changePassword()">Update password</button>
+    </div>
+  </section>
+
+  <div id="mainApp">
+
+    <nav class="tabs no-print">
+      <button class="active" onclick="showTab('dashboard', this)">
+        Dashboard
+      </button>
+      <button onclick="showTab('scanner', this)">
+        Scanner
+      </button>
+      <button onclick="showTab('reports', this)">
+        Reports
+      </button>
+      <button id="adminButton" class="hidden"
+              onclick="showTab('admin', this)">
+        Administration
+      </button>
+    </nav>
+
+    <!-- DASHBOARD -->
+    <section id="tab-dashboard">
+
+      <div class="stats">
+        <div class="stat">
+          <strong id="totalSeniors">0</strong>
+          <span>Senior Citizens</span>
+        </div>
+
+        <div class="stat">
+          <strong id="totalMedicines">0</strong>
+          <span>Medicine Records</span>
+        </div>
+
+        <div class="stat">
+          <strong id="totalToday">0</strong>
+          <span>Releases Today</span>
+        </div>
+
+        <div class="stat">
+          <strong id="totalReleases">0</strong>
+          <span>Total Releases</span>
+        </div>
+        <div class="stat">
+          <strong id="totalMale">0</strong>
+          <span>Male Senior Citizens</span>
+        </div>
+        <div class="stat">
+          <strong id="totalFemale">0</strong>
+          <span>Female Senior Citizens</span>
+        </div>
+        <div class="stat">
+          <strong id="totalGender">0</strong>
+          <span>Total Senior Citizens (Sex Count)</span>
+        </div>
+      </div>
+
+      <!-- ADD SENIOR -->
+      <div class="card">
+        <h2 id="seniorFormTitle">Register Senior Citizen</h2><div id="editModeNotice" class="notice warning hidden">Editing existing record. Senior Citizen ID will not change.</div>
+        <p class="muted">
+          Senior Citizen IDs are assigned automatically, starting at 1.
+          Do not manually assign or reuse an ID.
+        </p>
+
+        <div class="grid">
+          <div>
+            <label>Full name *</label>
+            <input id="fullName"
+                   placeholder="Last name, First name, Middle name"
+                   required>
+          </div>
+
+          <div>
+            <label>Barangay *</label>
+            <select id="barangay" required></select>
+          </div>
+
+          <div>
+            <label>Birthdate</label>
+            <input id="birthdate" type="date"
+                   onchange="calculateAge()"
+                   oninput="calculateAge()">
+            <div id="agePreview" class="muted">Age: —</div>
+          </div>
+
+          <div>
+            <label>Sex</label>
+            <select id="sex">
+              <option value="">Select</option>
+              <option value="Female">Female</option>
+              <option value="Male">Male</option>
+              <option value="Prefer not to say">Prefer not to say</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Contact number</label>
+            <input id="contact" inputmode="tel">
+          </div>
+
+          <div>
+            <label>Emergency contact</label>
+            <input id="emergencyContact">
+          </div>
+        </div>
+
+        <label>Address</label>
+        <input id="address">
+
+        <label>Notes (optional)</label>
+        <textarea id="notes"></textarea>
+
+        <h3>PhilHealth and Health Conditions</h3>
+        <label>PhilHealth Number</label>
+        <input id="philhealth" type="text" maxlength="30">
+
+        <div class="grid">
+          <label class="checkline"><input id="hypertension" type="checkbox"> Hypertension</label>
+          <label class="checkline"><input id="diabetes" type="checkbox"> Diabetes Mellitus</label>
+          <label class="checkline"><input id="bothConditions" type="checkbox" disabled> BOTH (automatically checked when both conditions are selected)</label>
+        </div>
+
+        <h3>Maintenance Medicines and Intended Monthly Quantity</h3>
+        <p class="muted">Piliin lamang ang gamot na nasa authorized medical record. Ilagay ang buwanang quantity ayon sa awtorisadong prescription/plan.</p>
+        <div class="medicine-grid">
+          <div class="medicine-item"><label class="checkline"><input id="med_amlodipine5" type="checkbox"> Amlodipine 5 mg</label><input id="qty_amlodipine5" type="number" min="0" placeholder="Intended quantity/month"></div>
+          <div class="medicine-item"><label class="checkline"><input id="med_amlodipine10" type="checkbox"> Amlodipine 10 mg</label><input id="qty_amlodipine10" type="number" min="0" placeholder="Intended quantity/month"></div>
+          <div class="medicine-item"><label class="checkline"><input id="med_losartan50" type="checkbox"> Losartan 50 mg</label><input id="qty_losartan50" type="number" min="0" placeholder="Intended quantity/month"></div>
+          <div class="medicine-item"><label class="checkline"><input id="med_losartan100" type="checkbox"> Losartan 100 mg</label><input id="qty_losartan100" type="number" min="0" placeholder="Intended quantity/month"></div>
+          <div class="medicine-item"><label class="checkline"><input id="med_metoprolol50" type="checkbox"> Metoprolol 50 mg</label><input id="qty_metoprolol50" type="number" min="0" placeholder="Intended quantity/month"></div>
+          <div class="medicine-item"><label class="checkline"><input id="med_metoprolol100" type="checkbox"> Metoprolol 100 mg</label><input id="qty_metoprolol100" type="number" min="0" placeholder="Intended quantity/month"></div>
+          <div class="medicine-item"><label class="checkline"><input id="med_metformin" type="checkbox"> Metformin</label><input id="qty_metformin" type="number" min="0" placeholder="Intended quantity/month"></div>
+          <div class="medicine-item"><label class="checkline"><input id="med_gliclazide30" type="checkbox"> Gliclazide 30 mg</label><input id="qty_gliclazide30" type="number" min="0" placeholder="Intended quantity/month"></div>
+          <div class="medicine-item"><label class="checkline"><input id="med_gliclazide50" type="checkbox"> Gliclazide 50 mg</label><input id="qty_gliclazide50" type="number" min="0" placeholder="Intended quantity/month"></div>
+          <div class="medicine-item"><label class="checkline"><input id="med_gliclazide80" type="checkbox"> Gliclazide 80 mg</label><input id="qty_gliclazide80" type="number" min="0" placeholder="Intended quantity/month"></div>
+          <div class="medicine-item"><label class="checkline"><input id="med_simvastatin20" type="checkbox"> Simvastatin 20 mg</label><input id="qty_simvastatin20" type="number" min="0" placeholder="Intended quantity/month"></div>
+          <div class="medicine-item"><label class="checkline"><input id="med_simvastatin40" type="checkbox"> Simvastatin 40 mg</label><input id="qty_simvastatin40" type="number" min="0" placeholder="Intended quantity/month"></div>
+        </div>
+
+        <label class="checkline"><input id="med_insulin" type="checkbox"> Insulin</label>
+        <label>Insulin specification</label><input id="insulinSpecify">
+        <label>Flu Vaccine Status (doses and dates: DD,MM,YYYY)</label>
+        <textarea id="fluVaccineStatus" placeholder="Example: 1 dose - 15,10,2026"></textarea>
+        <label>Pneumococcal Vaccine Status (doses and dates: DD,MM,YYYY)</label>
+        <textarea id="pneumococcalVaccineStatus" placeholder="Example: 1 dose - 15,10,2026"></textarea>
+        <label>Other health information</label><textarea id="otherHealthInfo"></textarea>
+        <label>Health remarks</label><textarea id="healthRemarks"></textarea>
+
+        <div class="actions">
+          <button onclick="saveSenior()" id="saveSeniorButton">Save Senior Citizen</button>
+          <button class="secondary" onclick="clearForm()">Clear / Cancel Edit</button>
+        </div>
+
+        <div id="saveMessage"></div>
+      </div>
+
+      <!-- BATCH UPLOAD -->
+      <div class="card">
+        <h2>Batch Upload Senior Citizens</h2>
+        <p class="muted">Download the CSV template, fill one senior citizen per row, then upload it here. Existing records will not be overwritten. Duplicate PhilHealth numbers are flagged/skipped by the server when available.</p>
+        <div class="actions no-print">
+          <button class="secondary" onclick="downloadBatchTemplate()">Download CSV Template</button>
+        </div>
+        <label>Select completed CSV file</label>
+        <input id="batchFile" type="file" accept=".csv,text/csv">
+        <div class="actions no-print">
+          <button onclick="uploadBatch()">Validate and Save Batch</button>
+        </div>
+        <div id="batchMessage"></div>
+        <div id="batchPreview" class="table-wrap"></div>
+      </div>
+
+      <!-- ALL SENIOR RECORDS -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+          <h2>All Senior Citizen Records</h2>
+          <button class="secondary" onclick="refreshAll()">Refresh</button>
+        </div>
+
+        <label>Search by ID, name, or contact number</label>
+        <input id="searchBox" oninput="searchSeniors()"
+               placeholder="Type to search...">
+
+        <div id="seniorTable" class="table-wrap"></div>
+      </div>
+
+      <!-- RECENT RELEASES -->
+      <div class="card">
+        <h2>Recent Medicine Releases</h2>
+        <div id="recentTable" class="table-wrap"></div>
+      </div>
+
+    </section>
+
+    <!-- SCANNER: VIEW ONLY -->
+    <section id="tab-scanner" class="hidden">
+      <div class="card">
+        <h2>Senior Citizen Medicine Status</h2>
+
+        <p class="muted">
+          Scan the QR code or enter the Senior Citizen ID to see only the medicines assigned to that senior citizen. Choose the medicine physically handed over, then tap the Received button to record the quantity. The status shows whether the monthly allocation has been fully released.
+        </p>
+
+        <label>Senior Citizen ID</label>
+        <input id="scanId" placeholder="Example: 12 or SC-12"
+               onkeydown="if(event.key === 'Enter') checkStatus()">
+
+        <div class="actions">
+          <button onclick="checkStatus()">Check Status</button>
+          <button class="secondary" onclick="openSecureScanner()">Open Secure Camera Scanner</button>
+          <button class="secondary" onclick="stopScanner()">Stop Camera</button>
+        </div>
+
+        <div id="reader"></div>
+        <div id="scanMessage"></div>
+        <div id="scanResult"></div>
+      </div>
+    </section>
+
+    <!-- REPORTS -->
+    <section id="tab-reports" class="hidden">
+      <div class="card">
+        <h2>Medicine Release Reports</h2>
+
+        <div class="grid">
+          <div>
+            <label>From date</label>
+            <input id="dateFrom" type="date">
+          </div>
+          <div>
+            <label>To date</label>
+            <input id="dateTo" type="date">
+          </div>
+          <div id="reportBarangayContainer">
+            <label>Barangay</label>
+            <select id="reportBarangay"></select>
+          </div>
+        </div>
+
+        <div class="actions no-print">
+          <button onclick="loadReports()">Generate Report</button>
+          <button class="secondary" onclick="window.print()">Print / Save PDF</button>
+          <button class="secondary" onclick="exportCSV()">Export CSV</button>
+        </div>
+
+        <p id="reportSummary" class="muted"></p>
+        <div id="reportTable" class="table-wrap"></div>
+      </div>
+    </section>
+
+    <!-- ADMINISTRATION -->
+    <section id="tab-admin" class="hidden">
+
+      <div class="card" id="barangayAdmin">
+        <h2>Add Barangay</h2>
+        <label>Barangay name</label>
+        <input id="newBarangayName">
+
+        <div class="actions">
+          <button onclick="addBarangay()">Save Barangay</button>
+        </div>
+
+        <div id="barangayMessage"></div>
+      </div>
+
+      <div class="card" id="userAdmin">
+        <h2>Create User Account</h2>
+
+        <div class="grid">
+          <div>
+            <label>Username</label>
+            <input id="newUsername" autocomplete="off">
+          </div>
+
+          <div>
+            <label>Temporary password</label>
+            <input id="newUserPassword" type="password" autocomplete="new-password">
+          </div>
+
+          <div>
+            <label>Role</label>
+            <select id="newUserRole">
+              <option value="WORKER">Barangay Worker</option>
+              <option value="ADMIN">Administrator</option>
+              <option value="SUPER_ADMIN">Super Administrator</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Assigned barangay</label>
+            <select id="newUserBarangay"></select>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button onclick="createUser()">Create Account</button>
+          <button class="secondary" onclick="loadUsers()">Refresh Users</button>
+        </div>
+
+        <div id="userMessage"></div>
+        <div id="usersTable" class="table-wrap"></div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+  let token = '';
+  let currentRole = '';
+  let currentUsername = '';
+  let barangays = [];
+  let seniorRecords = [];
+  let reportRecords = [];
+  let scanner = null;
+  let currentScanMedicines = [];
+  let searchTimer = null;
+  let editingSeniorId = '';
+  let lastScanResult = null;
+  document.addEventListener('change', event => {
+    if (event.target && ['hypertension','diabetes'].includes(event.target.id)) {
+      document.getElementById('bothConditions').checked =
+        document.getElementById('hypertension').checked &&
+        document.getElementById('diabetes').checked;
+    }
+  });
+
+  function escapeHTML(value) {
+    return String(value ?? '').replace(/[&<>"']/g, c => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    })[c]);
+  }
+
+  function value(id) {
+    return document.getElementById(id)?.value || '';
+  }
+
+  function message(id, text, type = 'success') {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = text
+      ? '<div class="notice ' + type + '">' + escapeHTML(text) + '</div>'
+      : '';
+  }
+
+  function callAPI(action, payload = {}) {
+    return new Promise((resolve, reject) => {
+      google.script.run
+        .withSuccessHandler(resolve)
+        .withFailureHandler(err => {
+          const msg = err && err.message ? err.message : String(err);
+          if (/session expired|sign in again|please sign in/i.test(msg)) {
+            token = '';
+          }
+          reject(new Error(msg));
+        })
+        .api(action, { ...payload, token: token });
+    });
+  }
+
+  function formatDate(dateString) {
+    if (!dateString) return '';
+    const d = new Date(dateString + 'T00:00:00');
+    return isNaN(d.getTime()) ? dateString : d.toLocaleDateString();
+  }
+
+  function calculateAge() {
+    const birth = value('birthdate');
+    const output = document.getElementById('agePreview');
+
+    if (!birth) {
+      output.textContent = 'Age: —';
+      return;
+    }
+
+    const b = new Date(birth + 'T00:00:00');
+    const today = new Date();
+
+    let age = today.getFullYear() - b.getFullYear();
+
+    if (
+      today.getMonth() < b.getMonth() ||
+      (today.getMonth() === b.getMonth() &&
+       today.getDate() < b.getDate())
+    ) {
+      age--;
+    }
+
+    output.textContent =
+      'Age: ' + (age >= 0 ? age + ' years old' : 'Invalid birthdate');
+  }
+
+
+  const medicineKeys = [
+    'amlodipine5','amlodipine10','losartan50','losartan100',
+    'metoprolol50','metoprolol100','metformin','gliclazide30',
+    'gliclazide50','gliclazide80','simvastatin20','simvastatin40'
+  ];
+  const medicineNames = {
+    amlodipine5:['Amlodipine','5 mg'], amlodipine10:['Amlodipine','10 mg'],
+    losartan50:['Losartan','50 mg'], losartan100:['Losartan','100 mg'],
+    metoprolol50:['Metoprolol','50 mg'], metoprolol100:['Metoprolol','100 mg'],
+    metformin:['Metformin',''], gliclazide30:['Gliclazide','30 mg'],
+    gliclazide50:['Gliclazide','50 mg'], gliclazide80:['Gliclazide','80 mg'],
+    simvastatin20:['Simvastatin','20 mg'], simvastatin40:['Simvastatin','40 mg']
+  };
+  function getMedicineSelections() {
+    const result = [];
+    medicineKeys.forEach(k => {
+      if (document.getElementById('med_' + k).checked) {
+        const qty = Number(value('qty_' + k));
+        result.push({
+          key:k, name:medicineNames[k][0], strength:medicineNames[k][1],
+          intendedMonthlyQuantity:Number.isFinite(qty) && qty > 0 ? qty : 0
+        });
+      }
+    });
+    if (document.getElementById('med_insulin').checked) {
+      result.push({
+        key:'insulin', name:'Insulin', strength:value('insulinSpecify'),
+        intendedMonthlyQuantity:0
+      });
+    }
+    return result;
+  }
+
+  function downloadBatchTemplate() {
+    const headers = [
+      'FullName','BarangayID','BirthDate','Sex','ContactNumber','EmergencyContact',
+      'Address','Notes','PhilHealthNumber','Hypertension','Diabetes',
+      'Amlodipine5_X','Amlodipine5_MonthlyQty','Amlodipine10_X','Amlodipine10_MonthlyQty',
+      'Losartan50_X','Losartan50_MonthlyQty','Losartan100_X','Losartan100_MonthlyQty',
+      'Metoprolol50_X','Metoprolol50_MonthlyQty','Metoprolol100_X','Metoprolol100_MonthlyQty',
+      'Metformin_X','Metformin_MonthlyQty','Gliclazide30_X','Gliclazide30_MonthlyQty',
+      'Gliclazide50_X','Gliclazide50_MonthlyQty','Gliclazide80_X','Gliclazide80_MonthlyQty',
+      'Simvastatin20_X','Simvastatin20_MonthlyQty','Simvastatin40_X','Simvastatin40_MonthlyQty',
+      'Insulin_X','InsulinSpecify','FluVaccineStatus','PneumococcalVaccineStatus',
+      'OtherHealthInfo','HealthRemarks'
+    ];
+    const sampleObj = {
+      FullName:'Juan Dela Cruz', BarangayID:'BRGY-001', BirthDate:'1945-06-15',
+      Sex:'Male', ContactNumber:'09171234567', Address:'SAMPLE ONLY',
+      PhilHealthNumber:'', Hypertension:'X', Diabetes:'', Amlodipine5_X:'X',
+      Amlodipine5_MonthlyQty:'30'
+    };
+    const sample = headers.map(h => sampleObj[h] || '');
+    const csv = [headers,sample].map(row => row.map(v => '"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+    const blob = new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'SC-MED-TRACK-Batch-Template.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function parseCSV(text) {
+    const rows=[]; let row=[], cell='', quoted=false;
+    text=text.replace(/^\uFEFF/,'');
+    for(let i=0;i<text.length;i++){
+      const c=text[i], n=text[i+1];
+      if(c==='"' && quoted && n==='"'){cell+='"';i++;}
+      else if(c==='"'){quoted=!quoted;}
+      else if(c===',' && !quoted){row.push(cell);cell='';}
+      else if((c==='\n'||c==='\r') && !quoted){
+        if(c==='\r'&&n==='\n')i++;
+        row.push(cell); if(row.some(x=>x.trim()!==''))rows.push(row);
+        row=[];cell='';
+      } else cell+=c;
+    }
+    if(cell.length||row.length){row.push(cell);if(row.some(x=>x.trim()!==''))rows.push(row);}
+    if(rows.length<2) throw new Error('CSV has no data rows.');
+    const headers=rows[0].map(x=>x.trim());
+    return rows.slice(1).map((r,idx)=>{
+      const obj={};headers.forEach((h,i)=>obj[h]=(r[i]||'').trim());
+      obj.__row=idx+2; return obj;
+    });
+  }
+
+  function csvBool(v) { return /^(x|yes|true|1|\/)$/i.test(String(v||'').trim()); }
+  function batchToPayload(r) {
+    const meds=[];
+    medicineKeys.forEach(k=>{
+      const cap=k.charAt(0).toUpperCase()+k.slice(1);
+      if(csvBool(r[cap+'_X'])){
+        const nm=medicineNames[k];
+        meds.push({key:k,name:nm[0],strength:nm[1],
+          intendedMonthlyQuantity:Number(r[cap+'_MonthlyQty']||0)});
+      }
+    });
+    if(csvBool(r['Insulin_X'])) meds.push({key:'insulin',name:'Insulin',strength:r.InsulinSpecify||'',intendedMonthlyQuantity:0});
+    return {
+      name:r.FullName||'', barangayId:r.BarangayID||'', birthDate:r.BirthDate||'',
+      sex:r.Sex||'', contact:r.ContactNumber||'', emergency:r.EmergencyContact||'',
+      address:r.Address||'', notes:r.Notes||'', philhealth:r.PhilHealthNumber||'',
+      hypertension:csvBool(r.Hypertension), diabetes:csvBool(r.Diabetes), medicines:meds,
+      insulinSpecify:r.InsulinSpecify||'', fluVaccineStatus:r.FluVaccineStatus||'',
+      pneumococcalVaccineStatus:r.PneumococcalVaccineStatus||'',
+      otherHealthInfo:r.OtherHealthInfo||'', healthRemarks:r.HealthRemarks||''
+    };
+  }
+
+  async function uploadBatch() {
+    const file=document.getElementById('batchFile').files[0];
+    if(!file){message('batchMessage','Choose the completed CSV template first.','error');return;}
+    const uploadButton = document.querySelector('button[onclick="uploadBatch()"]');
+    if (uploadButton) uploadButton.disabled = true;
+    try {
+      const rows=parseCSV(await file.text());
+      const preview=rows.slice(0,5).map(r=>[r.__row,r.FullName||'',r.BarangayID||'',r.BirthDate||'']);
+      document.getElementById('batchPreview').innerHTML=makeTable(['CSV row','Full name','Barangay ID','Birthdate'],preview);
+      if(!confirm('Import '+rows.length+' rows in small batches? Existing records will not be overwritten. Verify BarangayID and date formats first.'))return;
+      const payloads=rows.map(batchToPayload);
+      const chunkSize = 100; // User-requested batch size: up to 100 rows per server request.
+      let saved=0, failed=0, completed=0;
+      const allResults=[];
+      for(let start=0; start<payloads.length; start+=chunkSize){
+        const chunk=payloads.slice(start,start+chunkSize);
+        message('batchMessage','Uploading rows '+(start+1)+'–'+Math.min(start+chunkSize,payloads.length)+' of '+payloads.length+'… Please do not close this page.','warning');
+        const result=await callAPI('batchImportSeniors',{rows:chunk,rowOffset:start});
+        saved += Number(result.saved)||0;
+        failed += Number(result.failed)||0;
+        completed += chunk.length;
+        if(Array.isArray(result.results)) allResults.push(...result.results);
+        document.getElementById('batchPreview').innerHTML=makeTable(
+          ['CSV row','Status','Senior ID / Error'],
+          allResults.map(r=>[r.row,r.ok?'SAVED':'SKIPPED / ERROR',r.id?'SC-'+r.id:r.error||'Unknown'])
+        );
+        message('batchMessage','Progress: '+completed+'/'+payloads.length+' rows checked. Saved: '+saved+'; skipped/failed: '+failed+'.','warning');
+      }
+      message('batchMessage','Import finished. Saved: '+saved+', skipped/failed: '+failed+'. Review each row below before retrying failed rows.','success');
+      await refreshAll();
+    } catch(e) {
+      message('batchMessage','Import stopped: '+e.message+'. Do not re-upload the whole file yet; review the results already shown and retry only rows not marked SAVED.','error');
+    } finally {
+      if (uploadButton) uploadButton.disabled = false;
+    }
+  }
+
+  // REMEMBER USERNAME / PASSWORD
+  // Password saving is opt-in and stored locally on this device only.
+  const REMEMBER_USERNAME_KEY = 'scMedTrackRememberUsername';
+  const SAVED_USERNAME_KEY = 'scMedTrackSavedUsername';
+  const REMEMBER_PASSWORD_KEY = 'scMedTrackRememberPassword';
+  const SAVED_PASSWORD_KEY = 'scMedTrackSavedPassword';
+
+  function initializeRememberUsername() {
+    try {
+      const savedUsername = localStorage.getItem(SAVED_USERNAME_KEY) || '';
+      const rememberUsername = localStorage.getItem(REMEMBER_USERNAME_KEY) === 'true';
+      const savedPassword = localStorage.getItem(SAVED_PASSWORD_KEY) || '';
+      const rememberPassword = localStorage.getItem(REMEMBER_PASSWORD_KEY) === 'true';
+
+      document.getElementById('rememberUsername').checked = rememberUsername;
+      document.getElementById('rememberPassword').checked = rememberPassword;
+      if (rememberUsername && savedUsername) document.getElementById('username').value = savedUsername;
+      if (rememberPassword && savedPassword) document.getElementById('password').value = savedPassword;
+    } catch (e) {
+      // Storage may be disabled by browser privacy settings; login still works.
+    }
+  }
+
+  function updateRememberUsername(username) {
+    try {
+      const checkbox = document.getElementById('rememberUsername');
+      if (checkbox && checkbox.checked) {
+        localStorage.setItem(REMEMBER_USERNAME_KEY, 'true');
+        localStorage.setItem(SAVED_USERNAME_KEY, String(username || '').trim());
+      } else {
+        localStorage.setItem(REMEMBER_USERNAME_KEY, 'false');
+        localStorage.removeItem(SAVED_USERNAME_KEY);
+      }
+    } catch (e) {
+      // Do not block sign-in if browser storage is unavailable.
+    }
+  }
+
+  function updateRememberPassword(saveAfterSuccessfulLogin) {
+    try {
+      const checkbox = document.getElementById('rememberPassword');
+      if (checkbox && checkbox.checked) {
+        if (saveAfterSuccessfulLogin) {
+          localStorage.setItem(REMEMBER_PASSWORD_KEY, 'true');
+          localStorage.setItem(SAVED_PASSWORD_KEY, value('password'));
+        }
+      } else {
+        localStorage.setItem(REMEMBER_PASSWORD_KEY, 'false');
+        localStorage.removeItem(SAVED_PASSWORD_KEY);
+      }
+    } catch (e) {
+      // Do not block sign-in if browser storage is unavailable.
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', initializeRememberUsername);
+  // Also initialize immediately for Apps Script pages where DOMContentLoaded has fired.
+  initializeRememberUsername();
+
+  document.getElementById('rememberUsername').addEventListener('change', function () {
+    updateRememberUsername(this.checked ? document.getElementById('username').value : '');
+  });
+
+  document.getElementById('rememberPassword').addEventListener('change', function () {
+    updateRememberPassword(false);
+    if (!this.checked) document.getElementById('password').value = '';
+  });
+
+  // LOGIN
+  function login(event) {
+    event.preventDefault();
+    updateRememberUsername(value('username'));
+    message('loginMessage', 'Signing in...', 'warning');
+
+    google.script.run
+      .withSuccessHandler(async result => {
+        updateRememberUsername(value('username'));
+        updateRememberPassword(true);
+        token = result.token;
+        currentUsername = result.username;
+        currentRole = result.role;
+
+        document.getElementById('loginView').classList.add('hidden');
+        document.getElementById('appView').classList.remove('hidden');
+        document.getElementById('userArea').classList.remove('hidden');
+
+        document.getElementById('currentUser').textContent =
+          currentUsername + ' (' + currentRole + ')';
+
+        const admin = ['SUPER_ADMIN', 'ADMIN'].includes(currentRole);
+        document.getElementById('adminButton').classList.toggle('hidden', !admin);
+
+        document.getElementById('passwordPanel').classList.toggle(
+          'hidden', !result.mustChangePassword
+        );
+
+        document.getElementById('mainApp').classList.toggle(
+          'hidden', !!result.mustChangePassword
+        );
+
+        if (!result.mustChangePassword) {
+          await refreshAll();
+        }
+      })
+      .withFailureHandler(err => {
+        message('loginMessage', err.message || String(err), 'error');
+      })
+      .api('login', {
+        username: value('username'),
+        password: value('password')
+      });
+  }
+
+  async function logout() {
+    try {
+      await callAPI('logout');
+    } catch (e) {}
+    token = '';
+    location.reload();
+  }
+
+  async function changePassword() {
+    try {
+      await callAPI('changePassword', {
+        oldPassword: value('oldPassword'),
+        newPassword: value('newPassword')
+      });
+
+      document.getElementById('passwordPanel').classList.add('hidden');
+      document.getElementById('mainApp').classList.remove('hidden');
+
+      message('globalMessage', 'Password updated successfully.');
+      await refreshAll();
+    } catch (e) {
+      message('globalMessage', e.message, 'error');
+    }
+  }
+
+  // NAVIGATION
+  function showTab(name, button) {
+    document.querySelectorAll('#mainApp > section').forEach(section => {
+      section.classList.add('hidden');
+    });
+
+    document.getElementById('tab-' + name).classList.remove('hidden');
+
+    document.querySelectorAll('.tabs button').forEach(btn => {
+      btn.classList.remove('active');
+    });
+
+    if (button) button.classList.add('active');
+
+    if (name === 'scanner') stopScanner();
+    if (name === 'reports') loadReports();
+    if (name === 'admin') loadUsers();
+  }
+
+  // DASHBOARD
+  async function refreshAll() {
+    try {
+      const data = await callAPI('bootstrap');
+      barangays = data.barangays || [];
+
+      fillBarangayDropdowns();
+      renderDashboard(data.dashboard || {});
+      await loadSeniors();
+    } catch (e) {
+      message('globalMessage', e.message, 'error');
+    }
+  }
+
+  async function refreshDashboard() {
+    try {
+      const data = await callAPI('dashboard');
+      renderDashboard(data);
+    } catch (e) {
+      message('globalMessage', e.message, 'error');
+    }
+  }
+
+  function setTextIfPresent(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text == null ? '' : String(text);
+  }
+
+  function renderDashboard(data) {
+    data = data || {};
+    setTextIfPresent('totalSeniors', data.seniorCount || 0);
+    setTextIfPresent('totalMedicines', data.medicineCount || 0);
+    setTextIfPresent('totalToday', data.todayCount || 0);
+    setTextIfPresent('totalReleases', data.releaseCount || 0);
+    setTextIfPresent('totalMale', data.maleCount || 0);
+    setTextIfPresent('totalFemale', data.femaleCount || 0);
+    setTextIfPresent('totalGender', data.seniorCount || 0);
+
+    const recent = data.recent || [];
+
+    document.getElementById('recentTable').innerHTML = recent.length
+      ? makeTable(
+          ['Date', 'Senior ID', 'Medicine', 'Quantity', 'Released by'],
+          recent.map(r => [
+            formatDate(r.date),
+            'SC-' + r.seniorId,
+            r.medicine,
+            r.quantity,
+            r.releasedBy
+          ])
+        )
+      : '<p class="muted">No release records available.</p>';
+  }
+
+  function fillBarangayDropdowns() {
+    const dropdowns = [
+      'barangay',
+      'reportBarangay',
+      'newUserBarangay'
+    ];
+
+    dropdowns.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+
+      const previous = el.value;
+
+      const firstOption = id === 'reportBarangay'
+        ? '<option value="">All accessible barangays</option>'
+        : '<option value="">Select barangay</option>';
+
+      el.innerHTML = firstOption + barangays.map(b =>
+        '<option value="' + escapeHTML(b.id) + '">' +
+        escapeHTML(b.name) + '</option>'
+      ).join('');
+
+      if ([...el.options].some(o => o.value === previous)) {
+        el.value = previous;
+      }
+    });
+
+    if (currentRole === 'WORKER') {
+      document.getElementById('barangay').value =
+        barangays[0]?.id || '';
+
+      document.getElementById('barangay').disabled = true;
+      document.getElementById('reportBarangayContainer').classList.add('hidden');
+    } else {
+      document.getElementById('barangay').disabled = false;
+      document.getElementById('reportBarangayContainer').classList.remove('hidden');
+    }
+  }
+
+  function makeTable(headers, rows) {
+    return '<table><thead><tr>' +
+      headers.map(h => '<th>' + escapeHTML(h) + '</th>').join('') +
+      '</tr></thead><tbody>' +
+      rows.map(row => '<tr>' +
+        row.map(cell => '<td>' + escapeHTML(cell ?? '') + '</td>').join('') +
+        '</tr>').join('') +
+      '</tbody></table>';
+  }
+
+  async function loadSeniors() {
+    try {
+      seniorRecords = await callAPI('listSeniors', {
+        query: value('searchBox')
+      });
+
+      const table = document.getElementById('seniorTable');
+
+      if (!seniorRecords.length) {
+        table.innerHTML = '<p class="muted">No senior citizen records found.</p>';
+        return;
+      }
+
+      table.innerHTML =
+        '<table><thead><tr>' +
+        '<th>ID</th><th>Full name</th><th>Age</th>' +
+        '<th>Birthdate</th><th>Barangay</th><th>PhilHealth #</th><th>Conditions</th><th>Contact</th>' +
+        '<th class="no-print">Action</th></tr></thead><tbody>' +
+
+        seniorRecords.map(s => {
+          const barangayName =
+            (barangays.find(b => b.id === s.barangayId) || {}).name ||
+            s.barangayId;
+
+          return '<tr>' +
+            '<td>SC-' + escapeHTML(s.id) + '</td>' +
+            '<td>' + escapeHTML(s.name) + '</td>' +
+            '<td>' + escapeHTML(s.age ?? '') + '</td>' +
+            '<td>' + escapeHTML(formatDate(s.birthDate)) + '</td>' +
+            '<td>' + escapeHTML(barangayName) + '</td>' +
+            '<td>' + escapeHTML(s.philhealth || '') + '</td>' +
+            '<td>' + escapeHTML([s.hypertension?'Hypertension':'',s.diabetes?'Diabetes':''].filter(Boolean).join(', ')) + '</td>' +
+            '<td>' + escapeHTML(s.contact) + '</td>' +
+            '<td>' + escapeHTML(s.philhealth || '') + '</td>' +
+            '<td>' + escapeHTML([s.hypertension?'Hypertension':'',s.diabetes?'Diabetes':''].filter(Boolean).join(', ')) + '</td>' +
+            '<td class="no-print">' +
+            '<button class="secondary" onclick="editSeniorRecord(\'' + escapeHTML(s.id) + '\')">Edit</button> ' +
+            '<button class="danger" onclick="deleteSeniorRecord(\'' + escapeHTML(s.id) + '\')">Deactivate</button>' +
+            '</td></tr>';
+        }).join('') +
+
+        '</tbody></table>';
+    } catch (e) {
+      message('globalMessage', e.message, 'error');
+    }
+  }
+
+  function searchSeniors() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(loadSeniors, 250);
+  }
+
+  async function saveSenior() {
+    if (!value('fullName').trim()) { message('saveMessage','Please enter the full name.','error'); return; }
+    if (!value('barangay')) { message('saveMessage','Please select a barangay.','error'); return; }
+    try {
+      const payload = {
+        id: editingSeniorId,
+        name: value('fullName'), barangayId: value('barangay'), birthDate: value('birthdate'),
+        sex: value('sex'), contact: value('contact'), emergency: value('emergencyContact'),
+        address: value('address'), notes: value('notes'), philhealth: value('philhealth'),
+        hypertension: document.getElementById('hypertension').checked,
+        diabetes: document.getElementById('diabetes').checked,
+        medicines: getMedicineSelections(), insulinSpecify: value('insulinSpecify'),
+        fluVaccineStatus: value('fluVaccineStatus'),
+        pneumococcalVaccineStatus: value('pneumococcalVaccineStatus'),
+        otherHealthInfo: value('otherHealthInfo'), healthRemarks: value('healthRemarks')
+      };
+      const wasEditing = !!editingSeniorId;
+      const result = await callAPI(wasEditing ? 'updateSenior' : 'saveSenior', payload);
+      message('saveMessage',(wasEditing?'Updated successfully. ':'Saved successfully. ')+'Senior Citizen ID: SC-'+result.id,'success');
+      clearForm();
+      await loadSeniors();
+      await refreshDashboard();
+    } catch (e) { message('saveMessage',e.message,'error'); }
+  }
+
+  function clearForm() {
+    ['fullName','birthdate','contact','emergencyContact','address','notes','philhealth','insulinSpecify','fluVaccineStatus','pneumococcalVaccineStatus','otherHealthInfo','healthRemarks'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    document.getElementById('sex').value='';
+    ['hypertension','diabetes','bothConditions','med_insulin',...medicineKeys.map(k=>'med_'+k)].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
+    medicineKeys.forEach(k=>{const el=document.getElementById('qty_'+k);if(el)el.value='';});
+    editingSeniorId='';
+    document.getElementById('seniorFormTitle').textContent='Register Senior Citizen';
+    document.getElementById('saveSeniorButton').textContent='Save Senior Citizen';
+    document.getElementById('editModeNotice').classList.add('hidden');
+    calculateAge();
+  }
+
+  function editSeniorRecord(id) {
+    const s=seniorRecords.find(x=>String(x.id)===String(id));
+    if(!s){message('globalMessage','Record not found. Refresh and try again.','error');return;}
+    editingSeniorId=String(s.id);
+    document.getElementById('fullName').value=s.name||'';
+    document.getElementById('barangay').value=s.barangayId||'';
+    document.getElementById('birthdate').value=s.birthDate||'';
+    document.getElementById('sex').value=s.sex||'';
+    document.getElementById('contact').value=s.contact||'';
+    document.getElementById('emergencyContact').value=s.emergency||'';
+    document.getElementById('address').value=s.address||'';
+    document.getElementById('notes').value=s.notes||'';
+    document.getElementById('philhealth').value=s.philhealth||'';
+    document.getElementById('hypertension').checked=!!s.hypertension;
+    document.getElementById('diabetes').checked=!!s.diabetes;
+    document.getElementById('bothConditions').checked=!!s.hypertension&&!!s.diabetes;
+    document.getElementById('insulinSpecify').value=s.insulinSpecify||'';
+    document.getElementById('fluVaccineStatus').value=s.fluVaccineStatus||'';
+    document.getElementById('pneumococcalVaccineStatus').value=s.pneumococcalVaccineStatus||'';
+    document.getElementById('otherHealthInfo').value=s.otherHealthInfo||'';
+    document.getElementById('healthRemarks').value=s.healthRemarks||'';
+    ['med_insulin',...medicineKeys.map(k=>'med_'+k)].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
+    medicineKeys.forEach(k=>{document.getElementById('qty_'+k).value='';});
+    (s.medicines||[]).forEach(m=>{
+      if(m.key==='insulin'){document.getElementById('med_insulin').checked=true;document.getElementById('insulinSpecify').value=m.strength||s.insulinSpecify||'';return;}
+      const check=document.getElementById('med_'+m.key), qty=document.getElementById('qty_'+m.key);
+      if(check)check.checked=true; if(qty)qty.value=m.intendedMonthlyQuantity||'';
+    });
+    document.getElementById('seniorFormTitle').textContent='Edit Senior Citizen — SC-'+s.id;
+    document.getElementById('saveSeniorButton').textContent='Save Changes';
+    document.getElementById('editModeNotice').classList.remove('hidden');
+    calculateAge();
+    document.getElementById('tab-dashboard').scrollIntoView({behavior:'smooth'});
+  }
+
+  async function deleteSeniorRecord(id) {
+    const record = seniorRecords.find(s => String(s.id) === String(id));
+
+    if (!record) return;
+
+    if (!confirm(
+      'Deactivate ' + record.name + ' (SC-' + id + ')?\n\n' +
+      'Historical medicine records should be preserved.'
+    )) return;
+
+    try {
+      await callAPI('deleteSenior', { id: id });
+
+      message(
+        'globalMessage',
+        'Record deactivated. Its ID must not be reused.',
+        'success'
+      );
+
+      await loadSeniors();
+      await refreshDashboard();
+    } catch (e) {
+      message('globalMessage', e.message, 'error');
+    }
+  }
+
+  // SCANNER — STATUS LOOKUP ONLY
+  async function checkStatus() {
+    const id = value('scanId').trim();
+
+    if (!id) {
+      message('scanMessage', 'Scan or enter a Senior Citizen ID.', 'warning');
+      return;
+    }
+
+    try {
+      const result = await callAPI('scanStatus', { id: id });
+
+      if (!result.found) {
+        document.getElementById('scanResult').innerHTML = '';
+        message(
+          'scanMessage',
+          result.message || 'Senior citizen not found.',
+          'error'
+        );
+        return;
+      }
+
+      const barangayName =
+        (barangays.find(b => b.id === result.barangayId) || {}).name ||
+        result.barangayId;
+
+      currentScanMedicines = result.medicines || [];
+      let medicineHTML = '';
+
+      if (!currentScanMedicines.length) {
+        medicineHTML = '<div class="notice warning">NO MEDICINE RECORD FOUND FOR THIS SENIOR CITIZEN</div>';
+      } else {
+        const options = currentScanMedicines.map((m, i) =>
+          '<option value="' + i + '">' + escapeHTML(m.medicine + (m.strength ? ' ' + m.strength : '')) +
+          ' — ' + escapeHTML(m.monthlyStatus || (m.receivedToday ? 'Released today' : 'Not yet released today')) + '</option>'
+        ).join('');
+        medicineHTML = '<div class="medicine-detail">' +
+          '<h3>Choose Medicine to Release</h3>' +
+          '<label for="scanMedicineSelect">Select the medicine the senior citizen will receive</label>' +
+          '<select id="scanMedicineSelect" class="medicine-select" onchange="showSelectedMedicine()">' + options + '</select>' +
+          '<div id="selectedMedicineDetails"></div>' +
+          '</div>';
+      }
+
+      document.getElementById('scanResult').innerHTML =
+        '<div class="person">' +
+        '<h3>' + escapeHTML(result.name) +
+        ' <span class="pill">SC-' +
+        escapeHTML(result.id) + '</span></h3>' +
+        '<p>Barangay: ' + escapeHTML(barangayName) + '</p>' +
+        '<p>Age: ' + escapeHTML(result.age ?? '') + '</p>' +
+
+        '<div class="notice ' +
+        (result.receivedToday ? 'success' : 'warning') + '">' +
+
+        (result.receivedToday
+          ? 'A MEDICINE RELEASE WAS RECORDED TODAY'
+          : 'NO MEDICINE RELEASE WAS RECORDED TODAY') +
+
+        '</div></div>' + medicineHTML;
+
+      if (currentScanMedicines.length) showSelectedMedicine();
+
+      message(
+        'scanMessage',
+        'Status checked. Verify the senior citizen’s identity before taking action.',
+        'success'
+      );
+    } catch (e) {
+      message('scanMessage', e.message, 'error');
+    }
+  }
+
+  function showSelectedMedicine() {
+    const select = document.getElementById('scanMedicineSelect');
+    const target = document.getElementById('selectedMedicineDetails');
+    if (!select || !target) return;
+    const m = currentScanMedicines[Number(select.value)];
+    if (!m) { target.innerHTML = ''; return; }
+    const intended = Number(m.intendedMonthlyQuantity || 0);
+    const released = Number(m.releasedThisMonth || 0);
+    const complete = intended > 0 && released >= intended;
+    const statusClass = complete ? 'success' : (m.receivedToday ? 'success' : 'warning');
+    const statusText = complete ? 'MONTHLY ALLOCATION FULLY RELEASED' :
+      (m.monthlyStatus || (m.receivedToday ? 'RELEASE RECORDED TODAY' : 'NOT YET RELEASED TODAY'));
+    target.innerHTML = '<h3>' + escapeHTML(m.medicine || 'Medicine') + ' ' + escapeHTML(m.strength || '') + '</h3>' +
+      '<div class="notice ' + statusClass + '">' + escapeHTML(statusText) + '</div>' +
+      '<p>Intended this month: <b>' + escapeHTML(intended) + '</b></p>' +
+      '<p>Recorded released this month: <b>' + escapeHTML(released) + '</b></p>' +
+      '<p>Last release: ' + escapeHTML(formatDate(m.lastDate) || 'No record') + '</p>' +
+      '<p>Next eligible date: ' + escapeHTML(formatDate(m.nextDate) || 'Not available') + '</p>' +
+      '<div class="actions no-print"><button ' + (complete ? 'disabled title="Monthly quantity already fully released"' : '') +
+      ' onclick="recordMedicineRelease(\'' + escapeHTML(m.medicineId) + '\',' + intended + ')">💊 ✓ Received / Record Release</button></div>' +
+      (complete ? '<p class="muted">This medicine has reached its recorded monthly quantity. Check the record before issuing any additional amount.</p>' : '');
+  }
+
+  // Configure this after publishing scanner.html with GitHub Pages.
+  // Example: https://YOUR-USERNAME.github.io/sc-med-track-scanner/
+  const SECURE_SCANNER_URL = 'https://YOUR-GITHUB-USERNAME.github.io/sc-med-track-scanner/';
+  let secureScannerWindow = null;
+
+  function openSecureScanner() {
+    if (!SECURE_SCANNER_URL || SECURE_SCANNER_URL.includes('YOUR-GITHUB-USERNAME')) {
+      message('scanMessage', 'Secure scanner is not configured yet. Publish scanner.html on GitHub Pages, then replace SECURE_SCANNER_URL in Index.html with your actual HTTPS URL.', 'error');
+      return;
+    }
+    try {
+      const url = new URL(SECURE_SCANNER_URL);
+      if (url.protocol !== 'https:') {
+        message('scanMessage', 'The secure scanner URL must begin with https://.', 'error');
+        return;
+      }
+      secureScannerWindow = window.open(url.href, 'SCMedTrackSecureScanner');
+      if (!secureScannerWindow) {
+        message('scanMessage', 'Chrome blocked the scanner popup. Allow pop-ups for the SC-MED TRACK site, then press Open Secure Camera Scanner again.', 'error');
+        return;
+      }
+      message('scanMessage', 'Secure scanner opened in a separate tab. Allow camera access there, then scan the senior citizen QR code.', 'warning');
+    } catch (e) {
+      message('scanMessage', 'Could not open secure scanner: ' + (e.message || e), 'error');
+    }
+  }
+
+  window.addEventListener('message', function(event) {
+    // Accept only messages from the exact scanner tab opened by this app and its configured origin.
+    if (!secureScannerWindow || event.source !== secureScannerWindow) return;
+    let expectedOrigin;
+    try { expectedOrigin = new URL(SECURE_SCANNER_URL).origin; } catch (e) { return; }
+    if (event.origin !== expectedOrigin) return;
+    const data = event.data || {};
+    if (data.type === 'SC_MED_TRACK_SCANNER_STATUS') {
+      message('scanMessage', String(data.message || 'Scanner status updated.'), data.level === 'error' ? 'error' : 'warning');
+      return;
+    }
+    if (data.type !== 'SC_MED_TRACK_QR_RESULT') return;
+    const scannedId = String(data.id || '').trim();
+    if (!scannedId || scannedId.length > 120) {
+      message('scanMessage', 'The scanner returned an empty or invalid ID. Please scan again or enter the ID manually.', 'error');
+      return;
+    }
+    const scanInput = document.getElementById('scanId');
+    if (scanInput) scanInput.value = scannedId;
+    message('scanMessage', 'QR scanned successfully. Checking senior citizen status…', 'success');
+    try { secureScannerWindow.close(); } catch (e) {}
+    secureScannerWindow = null;
+    checkStatus();
+  });
+
+  async function startScanner() {
+    const reader = document.getElementById('reader');
+
+    try {
+      if (!window.Html5Qrcode) {
+        message('scanMessage', 'Scanner library did not load. Check your internet connection or enter the ID manually.', 'error');
+        return;
+      }
+
+      if (!reader) {
+        message('scanMessage', 'Scanner area (#reader) was not found. Check the Scanner section in Index.html.', 'error');
+        return;
+      }
+
+      // Make sure the Scanner tab and its camera container are visible.
+      const scannerTab = document.getElementById('tab-scanner');
+      if (scannerTab) scannerTab.classList.remove('hidden');
+      reader.style.display = 'block';
+      reader.style.width = '100%';
+      reader.style.minHeight = '250px';
+
+      await stopScanner();
+      scanner = new Html5Qrcode('reader');
+
+      const config = {
+        fps: 10,
+        qrbox: { width: 230, height: 230 },
+        aspectRatio: 1.0
+      };
+
+      const onDecoded = async decodedText => {
+        const scanInput = document.getElementById('scanId');
+        if (scanInput) scanInput.value = String(decodedText || '').trim();
+        await stopScanner();
+        await checkStatus();
+      };
+
+      // Prefer the rear camera on phones. If camera selection is unsupported,
+      // fall back to the browser's default camera.
+      try {
+        await scanner.start(
+          { facingMode: { ideal: 'environment' } },
+          config,
+          onDecoded,
+          () => {}
+        );
+      } catch (firstError) {
+        // Do not hide a permission denial by retrying with another camera.
+        const firstName = firstError && firstError.name ? firstError.name : '';
+        const firstText = String(firstError && firstError.message ? firstError.message : firstError);
+        if (firstName === 'NotAllowedError' || /NotAllowedError|Permission denied/i.test(firstText)) {
+          throw firstError;
+        }
+
+        const cameras = await Html5Qrcode.getCameras();
+        if (!cameras || cameras.length === 0) {
+          throw new Error('No camera was detected. Check the device camera and Chrome camera permission.');
+        }
+
+        // Use the last listed camera when available (usually the rear camera on mobile).
+        const selectedCamera = cameras[cameras.length - 1];
+        await scanner.start(selectedCamera.id, config, onDecoded, () => {});
+      }
+
+      message('scanMessage', 'Camera active. Point it at the senior citizen QR code.', 'success');
+    } catch (e) {
+      const name = e && e.name ? e.name : '';
+      const detail = String(e && e.message ? e.message : e);
+      let help = 'Cannot open camera. ' + detail;
+
+      if (name === 'NotAllowedError' || /NotAllowedError|Permission denied/i.test(detail)) {
+        help = 'Chrome denied camera access. Check Chrome Site settings for the exact deployed web-app domain, reload the app, and press Open Camera again. If permission already says Allow, check Windows Camera privacy settings and any organization policy.';
+      } else if (name === 'NotFoundError' || /NotFoundError|Requested device not found/i.test(detail)) {
+        help = 'No camera found. Check that the device has a camera and that it is enabled.';
+      } else if (name === 'NotReadableError' || /NotReadableError|Could not start video source/i.test(detail)) {
+        help = 'The camera may be busy or blocked by another app. Close other camera apps and try again.';
+      } else if (/secure context|https/i.test(detail)) {
+        help = 'Camera access requires the deployed HTTPS web app. Open the published web-app URL, not the Apps Script editor preview.';
+      }
+
+      message('scanMessage', help, 'error');
+      console.error('SC-MED TRACK camera error:', e);
+      // Clean up any partially initialized scanner instance.
+      try {
+        if (scanner) {
+          if (scanner.isScanning) await scanner.stop();
+          await scanner.clear();
+        }
+      } catch (cleanupError) {}
+      scanner = null;
+    }
+  }
+
+  async function recordMedicineRelease(medicineId, intendedQty) {
+    const suggested = Number(intendedQty) > 0 ? Number(intendedQty) : 1;
+    const raw = prompt('Enter the actual quantity handed to the senior citizen. Do not enter a quantity unless the medicine was physically released.', String(suggested));
+    if (raw === null) return;
+    const quantity = Number(raw);
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      message('scanMessage','Enter a quantity greater than zero.','error'); return;
+    }
+    if (!confirm('Confirm that this medicine was physically handed to the senior citizen in the quantity entered?')) return;
+    try {
+      let result = await callAPI('releaseMedicine',{medicineId:medicineId,quantity:quantity});
+      if (result.duplicate) {
+        if (!confirm(result.message+' Continue only if this additional release is correct.')) return;
+        result = await callAPI('releaseMedicine',{medicineId:medicineId,quantity:quantity,confirmDuplicate:true});
+      }
+      message('scanMessage','Medicine release recorded. Next eligible date: '+(result.nextEligibleDate||'not specified'),'success');
+      await checkStatus();
+    } catch(e) { message('scanMessage',e.message,'error'); }
+  }
+
+  async function stopScanner() {
+    if (!scanner) return;
+
+    try {
+      if (scanner.isScanning) await scanner.stop();
+      await scanner.clear();
+    } catch (e) {}
+
+    scanner = null;
+  }
+
+  // REPORTS
+  async function loadReports() {
+    try {
+      const result = await callAPI('reports', {
+        from: value('dateFrom'),
+        to: value('dateTo'),
+        barangayId: value('reportBarangay')
+      });
+
+      reportRecords = result.rows || [];
+
+      document.getElementById('reportSummary').textContent =
+        'Total records: ' + (result.total || 0);
+
+      document.getElementById('reportTable').innerHTML =
+        reportRecords.length
+          ? makeTable(
+              [
+                'Date', 'Senior ID', 'Senior name', 'Barangay',
+                'Medicine', 'Quantity', 'Released by', 'Next eligible'
+              ],
+              reportRecords.map(r => [
+                formatDate(r.date),
+                'SC-' + r.seniorId,
+                r.seniorName,
+                r.barangay,
+                r.medicine,
+                r.quantity,
+                r.releasedBy,
+                formatDate(r.nextDate)
+              ])
+            )
+          : '<p class="muted">No release records match the selected dates.</p>';
+    } catch (e) {
+      message('globalMessage', e.message, 'error');
+    }
+  }
+
+  function exportCSV() {
+    if (!reportRecords.length) {
+      alert('Generate a report with records first.');
+      return;
+    }
+
+    const headers = [
+      'Date', 'Senior ID', 'Senior name', 'Barangay',
+      'Medicine', 'Quantity', 'Released by', 'Next eligible'
+    ];
+
+    const rows = reportRecords.map(r => [
+      r.date, 'SC-' + r.seniorId, r.seniorName, r.barangay,
+      r.medicine, r.quantity, r.releasedBy, r.nextDate
+    ]);
+
+    const csv = [headers, ...rows].map(row =>
+      row.map(v =>
+        '"' + String(v ?? '').replace(/"/g, '""') + '"'
+      ).join(',')
+    ).join('\r\n');
+
+    const blob = new Blob(['\ufeff' + csv], {
+      type: 'text/csv;charset=utf-8;'
+    });
+
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'medicine-release-report.csv';
+    link.click();
+
+    URL.revokeObjectURL(link.href);
+  }
+
+  // ADMINISTRATION
+  async function addBarangay() {
+    try {
+      await callAPI('saveBarangay', {
+        name: value('newBarangayName')
+      });
+
+      document.getElementById('newBarangayName').value = '';
+
+      message('barangayMessage', 'Barangay added.', 'success');
+
+      const result = await callAPI('listBarangays');
+      barangays = result;
+      fillBarangayDropdowns();
+    } catch (e) {
+      message('barangayMessage', e.message, 'error');
+    }
+  }
+
+  async function createUser() {
+    try {
+      await callAPI('saveUser', {
+        username: value('newUsername'),
+        password: value('newUserPassword'),
+        role: value('newUserRole'),
+        barangayId: value('newUserBarangay')
+      });
+
+      message(
+        'userMessage',
+        'Account created. Give the temporary password securely to the intended user.',
+        'success'
+      );
+
+      document.getElementById('newUsername').value = '';
+      document.getElementById('newUserPassword').value = '';
+
+      await loadUsers();
+    } catch (e) {
+      message('userMessage', e.message, 'error');
+    }
+  }
+
+  async function loadUsers() {
+    if (!['SUPER_ADMIN', 'ADMIN'].includes(currentRole)) return;
+
+    try {
+      const users = await callAPI('listUsers');
+
+      document.getElementById('usersTable').innerHTML =
+        makeTable(
+          ['Username', 'Role', 'Barangay ID', 'Active'],
+          users.map(u => [
+            u.username,
+            u.role,
+            u.barangayId,
+            u.active ? 'Yes' : 'No'
+          ])
+        );
+    } catch (e) {
+      message('userMessage', e.message, 'error');
+    }
+  }
+</script>
+
+</body>
+</html>
